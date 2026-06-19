@@ -32,37 +32,37 @@
   --transition-slow: 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Dark Theme (Deep Space Navy & Gold) ---------- */
+/* ---------- Dark Theme (Deep Space Electric Slate) ---------- */
 [data-theme="dark"] {
-  --bg-primary: #0A0B10;
-  --bg-secondary: #11131C;
-  --bg-tertiary: #181B28;
+  --bg-primary: #090A0F;
+  --bg-secondary: #12141F;
+  --bg-tertiary: #1B1E2E;
   --bg-elevated: #151722;
-  --bg-hover: #1F2232;
-  --bg-active: #25293C;
+  --bg-hover: #1F2333;
+  --bg-active: #282C40;
 
-  --text-primary: #FAF9F6;
-  --text-secondary: #A0A5C0;
-  --text-tertiary: #626784;
-  --text-inverse: #0A0B10;
+  --text-primary: #F1F3F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #4A5568;
+  --text-inverse: #090A0F;
 
-  --accent-primary: #D97706; /* Amber / Metallic Gold */
+  --accent-primary: #D97706; /* Copper Accent (Dark) */
   --accent-primary-hover: #F59E0B;
   --accent-gradient: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%);
-  --accent-glow: rgba(217, 119, 6, 0.2);
+  --accent-glow: rgba(217, 119, 6, 0.18);
 
   --user-bubble-bg: linear-gradient(135deg, #D97706 0%, #92400E 100%);
-  --user-bubble-text: #FAF9F6;
+  --user-bubble-text: #F1F3F9;
   --ai-bubble-bg: transparent;
   --ai-bubble-border: transparent;
 
-  --glass-panel: rgba(17, 19, 28, 0.7);
+  --glass-panel: rgba(18, 20, 31, 0.7);
   --glass-panel-border: rgba(255, 255, 255, 0.06);
   --glass-panel-hover: rgba(25, 28, 41, 0.75);
 
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.04);
   --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
   --success: #10B981;
   --error: #EF4444;
@@ -72,15 +72,20 @@
   --scrollbar-thumb: rgba(255, 255, 255, 0.08);
   --scrollbar-thumb-hover: rgba(255, 255, 255, 0.16);
 
-  --code-bg: #0D0E15;
-  --code-header-bg: #151722;
+  --code-bg: #0C0E14;
+  --code-header-bg: #141620;
+
+  /* Tactile Material Depth Shadows */
+  --shadow-depth-soft: 0 12px 36px rgba(0, 0, 0, 0.45);
+  --shadow-depth-micro: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.25);
+  
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
 
-/* ---------- Light Theme (Warm Alabaster & Ochre) ---------- */
+/* ---------- Light Theme (Warm Alabaster & Ochre Copper) ---------- */
 [data-theme="light"] {
   --bg-primary: #FAF9F6;
   --bg-secondary: #F3EFE7;
@@ -94,7 +99,7 @@
   --text-tertiary: #9A9790;
   --text-inverse: #FAF9F6;
 
-  --accent-primary: #B45309; /* Deep Golden Ochre */
+  --accent-primary: #B45309; /* Deep Copper-Ochre (Light) */
   --accent-primary-hover: #D97706;
   --accent-gradient: linear-gradient(135deg, #B45309 0%, #D97706 100%);
   --accent-glow: rgba(180, 83, 9, 0.12);
@@ -104,11 +109,11 @@
   --ai-bubble-bg: transparent;
   --ai-bubble-border: transparent;
 
-  --glass-panel: rgba(243, 239, 231, 0.75);
+  --glass-panel: rgba(243, 239, 231, 0.78);
   --glass-panel-border: rgba(0, 0, 0, 0.08);
   --glass-panel-hover: rgba(234, 228, 213, 0.85);
 
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-subtle: rgba(0, 0, 0, 0.05);
   --border-default: rgba(0, 0, 0, 0.1);
   --border-strong: rgba(0, 0, 0, 0.16);
 
@@ -122,6 +127,11 @@
 
   --code-bg: #F4F1EA;
   --code-header-bg: #EAE4D5;
+
+  /* Tactile Material Depth Shadows */
+  --shadow-depth-soft: 0 12px 36px rgba(29, 28, 26, 0.08);
+  --shadow-depth-micro: 0 0 0 1px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(29, 28, 26, 0.03);
+
   --shadow-sm: 0 1px 2px rgba(29, 28, 26, 0.04);
   --shadow-md: 0 4px 12px rgba(29, 28, 26, 0.06);
   --shadow-lg: 0 12px 32px rgba(29, 28, 26, 0.08);
@@ -526,16 +536,32 @@ body {
   min-height: 100%;
 }
 
-/* ---------- Welcome / Hero Screen ---------- */
+/* ---------- Asymmetric Welcome / Hero Screen ---------- */
 .welcome {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  flex: 1;
-  padding: 40px 10px;
+  justify-content: space-between;
+  gap: 48px;
+  max-width: 900px;
+  width: 100%;
+  margin: auto;
+  padding: 40px var(--space-md);
+  text-align: left;
   animation: fadeInUp 0.6s var(--transition-slow) both;
+}
+
+.welcome-left {
+  flex: 1.2;
+  max-width: 440px;
+}
+
+.welcome-right {
+  flex: 1;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .welcome-icon {
@@ -552,7 +578,7 @@ body {
 }
 
 .welcome h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: var(--space-sm);
   background: var(--accent-gradient);
@@ -565,23 +591,30 @@ body {
 .welcome p {
   color: var(--text-secondary);
   font-size: 1.05rem;
-  margin-bottom: var(--space-xl);
-  max-width: 480px;
+  line-height: 1.6;
+}
+
+.welcome-hints-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .welcome-hints {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-md);
-  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
 }
 
 .hint-card {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-md);
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -590,7 +623,8 @@ body {
   font-family: var(--font-sans);
   cursor: pointer;
   text-align: left;
-  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .hint-card:hover {
@@ -598,6 +632,7 @@ body {
   border-color: var(--accent-primary);
   color: var(--text-primary);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .hint-icon {
@@ -606,7 +641,6 @@ body {
   justify-content: center;
   color: var(--accent-primary);
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .hint-icon-svg {
@@ -891,13 +925,13 @@ body {
   border: 1px solid var(--glass-panel-border);
   border-radius: var(--radius-xl);
   padding: 10px 14px;
-  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle);
+  box-shadow: var(--shadow-depth-soft), var(--shadow-depth-micro);
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
 
 .input-wrapper:focus-within {
   border-color: var(--accent-primary);
-  box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-glow);
+  box-shadow: var(--shadow-depth-soft), 0 0 0 3px var(--accent-glow), var(--shadow-depth-micro);
 }
 
 .input-wrapper textarea {
@@ -976,7 +1010,7 @@ body {
 }
 
 /* ============================================================
-   MODALS (GLASS PANELS)
+   MODALS (GLASS PANELS WITH HIGH DEPTH)
    ============================================================ */
 .modal-overlay {
   position: fixed;
@@ -997,7 +1031,7 @@ body {
   border-radius: var(--radius-lg);
   width: 92%;
   max-width: 490px;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-depth-soft), var(--shadow-depth-micro);
   animation: modalSlideIn 0.4s var(--transition-slow);
 }
 
@@ -1144,7 +1178,7 @@ body {
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-depth-soft), var(--shadow-depth-micro);
   z-index: 2000;
   padding: 6px;
   min-width: 160px;
@@ -1284,8 +1318,23 @@ body {
     display: flex;
   }
 
-  .welcome-hints {
-    grid-template-columns: 1fr;
+  .welcome {
+    flex-direction: column;
+    gap: 32px;
+    align-items: stretch;
+    text-align: center;
+    padding: 32px var(--space-sm);
+  }
+
+  .welcome-left {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .welcome-right {
+    max-width: 100%;
   }
 
   .message-content, .message.assistant .message-content {
