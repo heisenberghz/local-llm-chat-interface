@@ -46,28 +46,41 @@ router.post('/', async (req, res) => {
 
     const reader = ollamaRes.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done && !buffer) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        // Ollama returns newline-delimited JSON
-        const lines = chunk.split('\n').filter(Boolean);
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+        }
+
+        const lines = buffer.split('\n');
+        if (done) {
+          buffer = '';
+        } else {
+          buffer = lines.pop(); // Keep the last incomplete line in the buffer
+        }
 
         for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
           try {
-            const parsed = JSON.parse(line);
+            const parsed = JSON.parse(trimmed);
             res.write(`data: ${JSON.stringify(parsed)}\n\n`);
 
             if (parsed.done) {
               res.write('data: [DONE]\n\n');
             }
           } catch {
-            // Skip malformed lines
+            // Skip malformed lines (though with buffering we shouldn't have any)
           }
         }
+
+        if (done) break;
       }
     } catch (err) {
       if (err.name !== 'AbortError') {

@@ -212,6 +212,19 @@ async function streamResponse(model) {
   const bubble = aiMsgEl.querySelector('.message-bubble');
   let fullText = '';
   let evalCount = 0;
+  let updatePending = false;
+
+  const updateDOM = () => {
+    bubble.innerHTML = renderMarkdownSync(fullText);
+    scrollToBottom();
+    updatePending = false;
+  };
+
+  const scheduleDOMUpdate = () => {
+    if (updatePending) return;
+    updatePending = true;
+    requestAnimationFrame(updateDOM);
+  };
 
   try {
     const res = await sendChatMessage({
@@ -223,17 +236,27 @@ async function streamResponse(model) {
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done && !buffer) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n').filter((l) => l.startsWith('data: '));
+      if (value) {
+        buffer += decoder.decode(value, { stream: true });
+      }
+
+      const lines = buffer.split('\n');
+      if (done) {
+        buffer = '';
+      } else {
+        buffer = lines.pop(); // Keep the last incomplete line in the buffer
+      }
 
       for (const line of lines) {
-        const data = line.slice(6);
-        if (data === '[DONE]') continue;
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (!data || data === '[DONE]') continue;
 
         try {
           const parsed = JSON.parse(data);
@@ -244,8 +267,7 @@ async function streamResponse(model) {
 
           if (parsed.message && parsed.message.content) {
             fullText += parsed.message.content;
-            bubble.innerHTML = renderMarkdownSync(fullText);
-            scrollToBottom();
+            scheduleDOMUpdate();
           }
 
           // Capture token counts from Ollama's final response
@@ -256,11 +278,18 @@ async function streamResponse(model) {
           // Skip unparseable chunks
         }
       }
+      
+      if (done) break;
     }
   } catch (err) {
     if (err.name !== 'AbortError') {
       showError(`Failed to get response: ${err.message}`);
     }
+  }
+
+  // Force immediate DOM update if one is pending, before we do final rendering
+  if (updatePending) {
+    updateDOM();
   }
 
   // Finalize: render full markdown properly
