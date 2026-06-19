@@ -193,7 +193,11 @@ async function streamResponse(model) {
   const aiMsgEl = document.createElement('div');
   aiMsgEl.className = 'message assistant';
   aiMsgEl.innerHTML = `
-    <div class="message-avatar">AI</div>
+    <div class="message-avatar">
+      <svg class="avatar-icon animate-sparkle" viewBox="0 0 24 24">
+        <path d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z" fill="currentColor"/>
+      </svg>
+    </div>
     <div class="message-content">
       <div class="message-bubble">
         <div class="typing-indicator">
@@ -346,7 +350,19 @@ async function createMessageEl(msg) {
   const div = document.createElement('div');
   div.className = `message ${msg.role}`;
 
-  const avatarText = msg.role === 'user' ? 'U' : 'AI';
+  const avatarHtml = msg.role === 'user' 
+    ? `<div class="message-avatar">
+         <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+           <circle cx="12" cy="7" r="4"/>
+         </svg>
+       </div>`
+    : `<div class="message-avatar">
+         <svg class="avatar-icon animate-sparkle" viewBox="0 0 24 24">
+           <path d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z" fill="currentColor"/>
+         </svg>
+       </div>`;
+
   const tokens = msg.tokens || countTokens(msg.content);
   const time = msg.timestamp ? timeAgo(msg.timestamp) : '';
 
@@ -358,7 +374,7 @@ async function createMessageEl(msg) {
   }
 
   div.innerHTML = `
-    <div class="message-avatar">${avatarText}</div>
+    ${avatarHtml}
     <div class="message-content">
       <div class="message-bubble">${content}</div>
       <div class="message-meta">
