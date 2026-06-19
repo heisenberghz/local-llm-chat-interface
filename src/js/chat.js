@@ -4,7 +4,7 @@
 
 import { sendChatMessage, stopChat, updateConversation } from './storage.js';
 import { renderMarkdown, renderMarkdownSync } from './markdown.js';
-import { countTokens, formatTokens, generateId, timeAgo } from './utils.js';
+import { countTokens, formatTokens, generateId, timeAgo, debounce } from './utils.js';
 
 let currentConversation = null;
 let isStreaming = false;
@@ -72,6 +72,126 @@ export function initChat() {
       handleSend();
     });
   });
+
+  // Parameters Inspector Panel Toggle
+  const inspector = document.getElementById('inspector');
+  const toggleBtn = document.getElementById('btn-toggle-inspector');
+  const closeBtn = document.getElementById('btn-close-inspector');
+  
+  if (toggleBtn && inspector) {
+    const savedState = localStorage.getItem('aether-inspector-collapsed') !== 'false';
+    if (savedState) {
+      inspector.classList.add('collapsed');
+    } else {
+      inspector.classList.remove('collapsed');
+    }
+    
+    toggleBtn.addEventListener('click', () => {
+      const isCollapsed = inspector.classList.toggle('collapsed');
+      localStorage.setItem('aether-inspector-collapsed', isCollapsed);
+    });
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        inspector.classList.add('collapsed');
+        localStorage.setItem('aether-inspector-collapsed', 'true');
+      });
+    }
+  }
+
+  // Range Slider Visual Value Synchronization & Saving
+  const tempInput = document.getElementById('param-temp');
+  const tempVal = document.getElementById('val-temp');
+  const tokensInput = document.getElementById('param-tokens');
+  const tokensVal = document.getElementById('val-tokens');
+  const ctxSelect = document.getElementById('param-ctx');
+  const systemTextarea = document.getElementById('param-system');
+
+  if (tempInput && tempVal) {
+    tempInput.addEventListener('input', (e) => {
+      tempVal.textContent = e.target.value;
+      saveCurrentChatParameters();
+    });
+  }
+  if (tokensInput && tokensVal) {
+    tokensInput.addEventListener('input', (e) => {
+      tokensVal.textContent = e.target.value;
+      saveCurrentChatParameters();
+    });
+  }
+  if (ctxSelect) {
+    ctxSelect.addEventListener('change', saveCurrentChatParameters);
+  }
+  if (systemTextarea) {
+    systemTextarea.addEventListener('input', debounce(saveCurrentChatParameters, 500));
+  }
+}
+
+/**
+ * Save parameters to the active conversation object.
+ */
+async function saveCurrentChatParameters() {
+  if (!currentConversation) return;
+
+  const tempInput = document.getElementById('param-temp');
+  const tokensInput = document.getElementById('param-tokens');
+  const ctxSelect = document.getElementById('param-ctx');
+  const systemTextarea = document.getElementById('param-system');
+
+  const parameters = {
+    temperature: tempInput ? parseFloat(tempInput.value) : 0.7,
+    num_ctx: ctxSelect ? parseInt(ctxSelect.value, 10) : 2048,
+    num_predict: tokensInput ? parseInt(tokensInput.value, 10) : 2048,
+    systemPrompt: systemTextarea ? systemTextarea.value : '',
+  };
+
+  currentConversation.parameters = parameters;
+  currentConversation.systemPrompt = parameters.systemPrompt;
+
+  await updateConversation(currentConversation.id, {
+    parameters: currentConversation.parameters,
+    systemPrompt: currentConversation.systemPrompt,
+  });
+}
+
+/**
+ * Load parameters into the sidebar inputs when switching chats.
+ */
+export function loadChatParameters(conv) {
+  const tempInput = document.getElementById('param-temp');
+  const tempVal = document.getElementById('val-temp');
+  const ctxSelect = document.getElementById('param-ctx');
+  const tokensInput = document.getElementById('param-tokens');
+  const tokensVal = document.getElementById('val-tokens');
+  const systemTextarea = document.getElementById('param-system');
+
+  const params = (conv && conv.parameters) || {
+    temperature: 0.7,
+    num_ctx: 2048,
+    num_predict: 2048,
+    systemPrompt: (conv && conv.systemPrompt) || '',
+  };
+
+  if (tempInput) {
+    tempInput.value = params.temperature !== undefined ? params.temperature : 0.7;
+    if (tempVal) tempVal.textContent = tempInput.value;
+  }
+  if (ctxSelect) {
+    ctxSelect.value = params.num_ctx !== undefined ? params.num_ctx : 2048;
+  }
+  if (tokensInput) {
+    tokensInput.value = params.num_predict !== undefined ? params.num_predict : 2048;
+    if (tokensVal) tokensVal.textContent = tokensInput.value;
+  }
+  if (systemTextarea) {
+    systemTextarea.value = params.systemPrompt || '';
+  }
+
+  // Reset visual performance metrics
+  const speedEl = document.getElementById('metric-speed');
+  const timeEl = document.getElementById('metric-time');
+  if (speedEl) speedEl.textContent = '— tokens/s';
+  if (timeEl) timeEl.textContent = '— s';
 }
 
 /**
@@ -79,6 +199,7 @@ export function initChat() {
  */
 export async function renderConversation(conv) {
   currentConversation = conv;
+  loadChatParameters(conv);
   const messages = messagesEl();
 
   // Clear messages but keep the welcome element
@@ -174,6 +295,19 @@ async function streamResponse(model) {
   sendBtn().style.display = 'none';
   stopBtn().style.display = 'flex';
 
+  // Collect active parameter options
+  const tempInput = document.getElementById('param-temp');
+  const tokensInput = document.getElementById('param-tokens');
+  const ctxSelect = document.getElementById('param-ctx');
+  
+  const options = {
+    temperature: tempInput ? parseFloat(tempInput.value) : 0.7,
+    num_ctx: ctxSelect ? parseInt(ctxSelect.value, 10) : 2048,
+    num_predict: tokensInput ? parseInt(tokensInput.value, 10) : 2048,
+  };
+
+  const startTime = performance.now();
+
   // Build messages for Ollama (include system prompt if set)
   const settings = JSON.parse(localStorage.getItem('localchat-settings') || '{}');
   const ollamaMessages = [];
@@ -238,6 +372,7 @@ async function streamResponse(model) {
       model,
       messages: ollamaMessages,
       requestId: currentRequestId,
+      options,
       signal: currentAbortController.signal,
     });
 
@@ -303,7 +438,16 @@ async function streamResponse(model) {
   if (fullText) {
     bubble.innerHTML = await renderMarkdown(fullText);
 
+    const durationSeconds = ((performance.now() - startTime) / 1000).toFixed(2);
     const tokens = evalCount || countTokens(fullText);
+    const tokensPerSec = evalCount ? (evalCount / durationSeconds).toFixed(1) : (tokens / durationSeconds).toFixed(1);
+
+    // Update visual metrics panel
+    const speedEl = document.getElementById('metric-speed');
+    const timeEl = document.getElementById('metric-time');
+    if (speedEl) speedEl.textContent = `${tokensPerSec} tokens/s`;
+    if (timeEl) timeEl.textContent = `${durationSeconds} s`;
+
     const meta = aiMsgEl.querySelector('.message-meta');
     meta.querySelector('.message-time').textContent = 'just now';
     meta.querySelector('.message-tokens').textContent = formatTokens(tokens);
@@ -318,6 +462,7 @@ async function streamResponse(model) {
     currentConversation.messages.push(aiMsg);
     await updateConversation(currentConversation.id, {
       messages: currentConversation.messages,
+      parameters: currentConversation.parameters,
     });
   }
 

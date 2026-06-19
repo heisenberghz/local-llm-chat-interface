@@ -74,11 +74,11 @@ export async function saveSettings(data) {
 
 // --- Chat (streaming) ---
 
-export async function sendChatMessage({ model, messages, requestId, signal }) {
+export async function sendChatMessage({ model, messages, requestId, options, signal }) {
   const res = await fetch(`${BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: true, requestId }),
+    body: JSON.stringify({ model, messages, stream: true, requestId, options }),
     signal,
   });
 

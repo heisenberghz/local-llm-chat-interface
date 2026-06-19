@@ -9,7 +9,7 @@ import {
   updateConversation,
   deleteConversation,
 } from './storage.js';
-import { renderConversation, setCurrentConversation, getCurrentConversation, getIsStreaming } from './chat.js';
+import { renderConversation, setCurrentConversation, getCurrentConversation, getIsStreaming, loadChatParameters } from './chat.js';
 import { timeAgo } from './utils.js';
 
 let conversations = [];
@@ -143,6 +143,7 @@ async function handleNewChat() {
   if (getIsStreaming()) return;
   activeId = null;
   setCurrentConversation(null);
+  loadChatParameters(null);
   listEl().querySelectorAll('.conv-item').forEach((el) => el.classList.remove('active'));
 
   // Reset chat area

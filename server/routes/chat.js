@@ -11,7 +11,7 @@ const activeStreams = new Map();
  * Forwards messages to Ollama and streams the response back.
  */
 router.post('/', async (req, res) => {
-  const { model, messages, stream = true, requestId } = req.body;
+  const { model, messages, stream = true, requestId, options } = req.body;
 
   if (!model || !messages) {
     return res.status(400).json({ error: 'model and messages are required' });
@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
     const ollamaRes = await fetch(ollamaUrl('/api/chat'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages, stream }),
+      body: JSON.stringify({ model, messages, stream, options }),
       signal: controller.signal,
     });
 

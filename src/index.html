@@ -86,6 +86,12 @@
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
           </button>
+          <button class="btn-icon" id="btn-toggle-inspector" title="Toggle Parameters Inspector">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -186,6 +192,68 @@
         </div>
       </div>
     </main>
+
+    <!-- System Inspector Sidebar -->
+    <aside class="inspector collapsed" id="inspector">
+      <div class="inspector-header">
+        <h3>System Parameters</h3>
+        <button class="btn-icon" id="btn-close-inspector" title="Close Panel">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="inspector-body">
+        <div class="inspector-group">
+          <div class="inspector-label-row">
+            <label for="param-temp">Temperature</label>
+            <span id="val-temp" class="param-value">0.7</span>
+          </div>
+          <input type="range" id="param-temp" min="0" max="2" step="0.1" value="0.7" />
+          <span class="param-hint">Controls generation creativity. Higher values make output more random, lower values make it more deterministic.</span>
+        </div>
+
+        <div class="inspector-group">
+          <label for="param-ctx">Context Length</label>
+          <select id="param-ctx">
+            <option value="2048">2048 (Default)</option>
+            <option value="4096">4096 (Standard)</option>
+            <option value="8192">8192 (Detailed)</option>
+            <option value="16384">16384 (Extended)</option>
+          </select>
+          <span class="param-hint">The memory history window limit. Larger context allows longer chats but consumes more RAM/VRAM.</span>
+        </div>
+
+        <div class="inspector-group">
+          <div class="inspector-label-row">
+            <label for="param-tokens">Max Tokens</label>
+            <span id="val-tokens" class="param-value">2048</span>
+          </div>
+          <input type="range" id="param-tokens" min="128" max="4096" step="128" value="2048" />
+          <span class="param-hint">The maximum number of tokens to generate in a single response block.</span>
+        </div>
+
+        <div class="inspector-group">
+          <label for="param-system">System Prompt Override</label>
+          <textarea id="param-system" rows="4" placeholder="e.g. You are a helpful code assistant..."></textarea>
+          <span class="param-hint">Instructions for this specific chat, overriding global system prompts.</span>
+        </div>
+
+        <div class="inspector-divider"></div>
+
+        <div class="inspector-group">
+          <label>Performance Metrics</label>
+          <div class="metric-card">
+            <span class="metric-label">Evaluation Speed</span>
+            <span id="metric-speed" class="metric-val">— tokens/s</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Response Time</span>
+            <span id="metric-time" class="metric-val">— s</span>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <!-- Settings Modal -->
