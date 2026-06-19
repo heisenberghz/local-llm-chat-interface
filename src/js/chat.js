@@ -432,12 +432,14 @@ function createWelcome() {
   div.id = 'welcome';
   div.innerHTML = `
     <div class="welcome-icon">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 3a9 9 0 0 0-9 9M21 12a9 9 0 0 0-9 9"/>
+        <polygon points="12,8 15,12 12,16 9,12" fill="currentColor"/>
       </svg>
     </div>
-    <h1>Welcome to LocalChat</h1>
-    <p>Select a model above and start chatting.</p>
+    <h1>Aether</h1>
+    <p>Your private, local AI assistant. Choose a model above and start chatting.</p>
   `;
   return div;
 }
