@@ -783,8 +783,8 @@ body::before {
 }
 
 .message-bubble code {
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
 }
 
 .message-bubble :not(pre) > code {
@@ -792,7 +792,8 @@ body::before {
   color: var(--text-primary);
   padding: 1px 4px;
   border-radius: var(--radius-xs);
-  font-size: 13px;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
   border: 1px solid var(--border-default);
 }
 
@@ -840,13 +841,16 @@ body::before {
   padding: 14px;
   background: var(--code-bg);
   overflow-x: auto;
-  font-size: 13px;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
   line-height: 1.5;
 }
 
 .code-block-wrapper pre code {
   background: none;
   padding: 0;
+  font-family: var(--font-mono) !important;
+  font-size: 14px !important;
 }
 
 /* ---------- Streaming indicator ---------- */
@@ -896,7 +900,7 @@ body::before {
   left: 0;
   right: 0;
   background: var(--bg-secondary);
-  border-top: 1px solid var(--border-default);
+  border-top: 1px solid var(--border-strong); /* Heavyweight Divider */
   flex-shrink: 0;
   z-index: 5;
 }
@@ -920,8 +924,8 @@ body::before {
   border: none;
   background: none;
   color: var(--text-primary);
-  font-size: 0.95rem;
-  font-family: var(--font-sans);
+  font-size: 14px;
+  font-family: var(--font-mono);
   line-height: 1.5;
   padding: 6px 0;
   max-height: var(--input-max-height);
@@ -1311,4 +1315,29 @@ body::before {
     padding: 20px 16px;
     gap: 12px;
   }
+}
+
+/* ---------- High-Precision Active Click UI Feedback ---------- */
+.hint-card:active {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--accent-primary) !important;
+  transform: scale(0.99);
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-send:active,
+.btn-stop:active,
+.btn-icon:active,
+.sidebar-footer-btn:active,
+.conv-item:active {
+  background: var(--bg-active) !important;
+  border-color: var(--accent-primary) !important;
+  transform: scale(0.97) !important;
+}
+
+/* Modals Technical Double-Border outline details */
+.modal {
+  outline: 1px solid var(--border-subtle);
+  outline-offset: -3px;
 }
