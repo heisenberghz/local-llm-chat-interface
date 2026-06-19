@@ -4,66 +4,55 @@ This is the global source of truth for the Aether design system. All component o
 
 ---
 
-## 1. Brand Identity & Persona: "Aether" (Nebula Velvet & Cyber Coral)
-- **Vibe:** Sci-Fi spatial computing dashboard, ultra-luxury high-contrast dark space, neon refraction effects, and custom geometric glass nodes.
+## 1. Brand Identity: "Architectural Precision"
+- **Style Concept:** Heavyweight desktop workspace, sharp 90-degree lines, minimal 2px corner radii, structural grids, double-border divisions, and high-contrast drafting board layouts.
 - **Brand name:** **Aether** (Local Intelligence Workspace)
 - **Typography:**
-  - **Headings:** Space Grotesk (futuristic, geometric, crisp tech)
-  - **Body:** Plus Jakarta Sans (elegant, modern, high legibility)
-  - **Code:** JetBrains Mono (high readability monospace)
+  - **Headings & Logo:** Cormorant Garamond (Sophisticated, elegant editorial serif)
+  - **UI Controls & Labels:** Inter (Neutral, precise, readable sans-serif)
+  - **Chat Streams & Code:** JetBrains Mono (High readability monospace)
 
 ---
 
-## 2. Color System: "Nebula Velvet" Base & "Cyber Coral" Accent
+## 2. Color System: "Obsidian & Oxidized Metal"
 
-Our colors are designed to stand completely apart from standard AI platforms (ChatGPT's slate and Claude's paper cream) by using velvet obsidian bases and radiant iridescent cyber-coral highlights.
+Designed to replicate the matte textures of graphite, oxidized copper, and industrial metals.
 
-### 🔴 Dark Theme (Nebula Velvet Space)
+### 🔴 Dark Theme (Obsidian & Copper-Zinc)
 | Token Name | Color Value | Role |
 |------------|-------------|------|
-| `--bg-primary` | `#05050A` | Pure obsidian-indigo void |
-| `--bg-secondary` | `#0B0C15` | Sidebar, input panels, and modals |
-| `--bg-tertiary` | `#131525` | Hover states, button backdrops, active tabs |
-| `--text-primary` | `#F0F1FA` | High-luminance lavender white |
-| `--text-secondary` | `#8F93B8` | Muted cool-indigo text |
-| `--text-tertiary` | `#585C7D` | Secondary support text |
-| `--accent-primary` | `#FF007F` | Cyber Orchid-Pink primary accent |
-| `--accent-primary-hover` | `#FF6B6B` | Cyber Coral secondary accent |
-| `--accent-gradient` | `linear-gradient(135deg, #FF007F 0%, #FF6B6B 50%, #FF8E53 100%)` | Radiant Cyber Coral glow gradient |
-| `--accent-glow` | `rgba(255, 0, 127, 0.16)` | Neon coral ambient backlighting |
-| `--glass-panel` | `rgba(11, 12, 21, 0.72)` | Translucent glass overlays |
-| `--border-subtle` | `rgba(255, 0, 127, 0.05)` | Faint coral-tinted glass border |
-| `--border-default` | `rgba(255, 255, 255, 0.08)` | Standard glass border |
-| `--border-strong` | `rgba(255, 255, 255, 0.15)` | High contrast lines |
+| `--bg-primary` | `#0E0F11` | Obsidian matte charcoal background |
+| `--bg-secondary` | `#15171B` | Sidebar, input panels, and modals (Zinc graphite) |
+| `--bg-tertiary` | `#1C1F24` | Hover states, button backdrops, active tabs |
+| `--text-primary` | `#ECEFF4` | Brushed silver / platinum text |
+| `--text-secondary` | `#8C95A5` | Muted Industrial Zinc gray |
+| `--text-tertiary` | `#4E5563` | Dark iron gray |
+| `--accent-primary` | `#3FA396` | Muted, desaturated Oxidized Copper (Teal-green) |
+| `--accent-primary-hover` | `#4FB5A8` | Bright Oxidized Copper |
+| `--accent-glow` | `rgba(63, 163, 150, 0.1)` | Soft copper ambient outlines |
+| `--glass-panel` | `rgba(21, 23, 27, 0.95)` | Command Center opaque backdrop |
+| `--border-subtle` | `#1F2228` | Fine structural grid line |
+| `--border-default` | `#2D323C` | Standard division boundary |
+| `--border-strong` | `#3F4654` | Accent borders (e.g., active elements) |
 
-### 🟡 Light Theme (Aurora Quartz)
+### 🟡 Light Theme (Brushed Limestone & Iron)
 | Token Name | Color Value | Role |
 |------------|-------------|------|
-| `--bg-primary` | `#F7F8FC` | Crisp ice-white background |
-| `--bg-secondary` | `#EDEDF5` | Sidebar and panel backgrounds |
-| `--bg-tertiary` | `#DFDFEC` | Hover states and button backdrops |
-| `--text-primary` | `#0B0C15` | Deep navy charcoal text |
-| `--text-secondary` | `#636780` | Muted slate-blue text |
-| `--accent-primary` | `#FF007F` | Cyber Orchid-Pink primary accent |
-| `--accent-glow` | `rgba(255, 0, 127, 0.08)` | Ambient shadow overlay |
-| `--glass-panel` | `rgba(237, 237, 245, 0.8)` | Translucent overlays |
-| `--border-subtle` | `rgba(255, 0, 127, 0.08)` | Faint pink border |
-| `--border-default` | `rgba(0, 0, 0, 0.08)` | Standard boundaries |
-| `--border-strong` | `rgba(0, 0, 0, 0.14)` | High contrast divisions |
+| `--bg-primary` | `#EBEAE5` | Matte limestone/paper background |
+| `--bg-secondary` | `#DFDED7` | Sidebar & input panel background |
+| `--bg-tertiary` | `#D2D1CA` | Hover states and button backdrops |
+| `--text-primary` | `#161719` | Dark charcoal / carbon text |
+| `--text-secondary` | `#585C66` | Iron-gray secondary text |
+| `--accent-primary` | `#1D6B60` | Deep oxidized copper green |
+| `--accent-glow` | `rgba(29, 107, 96, 0.08)` | Soft outline highlight |
+| `--glass-panel` | `rgba(223, 222, 215, 0.96)` | Full width background panel |
+| `--border-subtle` | `#D2D1CA` | Fine division |
+| `--border-default` | `#C6C5BD` | Standard border line |
+| `--border-strong` | `#94938C` | Strong frame boundary |
 
 ---
 
-## 3. High-Elevation Tactile Shadow System
-
-- **Nebula Glow Shadow (Primary):** Neon-fused drop shadow.
-  - Dark: `0 16px 40px rgba(0, 0, 0, 0.5), 0 4px 16px var(--accent-glow)`
-  - Light: `0 16px 40px rgba(99, 103, 128, 0.1), 0 4px 16px var(--accent-glow)`
-- **Micro-Shadow (Secondary):** Clean border defining wrap.
-  - Dark: `0 0 0 1px rgba(255, 255, 255, 0.05), 0 2px 4px rgba(0, 0, 0, 0.3)`
-  - Light: `0 0 0 1px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(99, 103, 128, 0.03)`
-
----
-
-## 4. Key Layout Spec updates
-- **Asymmetric Nebula Welcome Column:** The left column hosts the rotating geometric Double-Ring prism glyph with large brand letters. The right column lists prompt paths vertically.
-- **Glassmorphic Floating Pill Input:** Staged with an outline focus gradient that shimmers under active states.
+## 3. Structural Spec Update
+- **Full-Width "Command Center" Input:** The input container spans 100% of the main workspace panel, defined by sharp horizontal boundaries rather than floating round pills.
+- **Architectural Grid Blueprint:** Uses sharp corners (`border-radius: 2px` max) and double-borders (`border: 1px solid var(--border-default)`) on buttons and container boundaries.
+- **Asymmetric Sidebar Welcome:** Left panel contains the abstract draft grid icon, and the right panel lists prompts in a structured drafting list.

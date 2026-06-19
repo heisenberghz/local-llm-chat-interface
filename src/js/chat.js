@@ -194,8 +194,11 @@ async function streamResponse(model) {
   aiMsgEl.className = 'message assistant';
   aiMsgEl.innerHTML = `
     <div class="message-avatar">
-      <svg class="avatar-icon animate-sparkle" viewBox="0 0 24 24">
-        <path d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z" fill="currentColor"/>
+      <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter">
+        <rect x="3" y="3" width="18" height="18"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="12" y1="3" x2="12" y2="21"/>
+        <circle cx="12" cy="12" r="3" stroke-dasharray="1 1"/>
       </svg>
     </div>
     <div class="message-content">
@@ -358,8 +361,11 @@ async function createMessageEl(msg) {
          </svg>
        </div>`
     : `<div class="message-avatar">
-         <svg class="avatar-icon animate-sparkle" viewBox="0 0 24 24">
-           <path d="M12 2c0 5.523 4.477 10 10 10-5.523 0-10 4.477-10 10 0-5.523-4.477-10-10-10 5.523 0 10-4.477 10-10z" fill="currentColor"/>
+         <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter">
+           <rect x="3" y="3" width="18" height="18"/>
+           <line x1="3" y1="12" x2="21" y2="12"/>
+           <line x1="12" y1="3" x2="12" y2="21"/>
+           <circle cx="12" cy="12" r="3" stroke-dasharray="1 1"/>
          </svg>
        </div>`;
 
