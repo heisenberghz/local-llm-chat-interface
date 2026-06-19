@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Local configuration / secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Server data & local state
+server/data/conversations/*.json
+!server/data/conversations/.gitkeep
+server/data/settings.json
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Agent planning files
+implementation_plan.md
+walkthrough.md
+task.md
