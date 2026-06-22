@@ -1532,3 +1532,79 @@ body::before {
     width: 280px;
   }
 }
+
+/* ---------- Settings Model Downloader UI ---------- */
+.modal-divider {
+  border-top: 1px solid var(--border-default);
+  margin: 8px 0;
+}
+
+.settings-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.input-action-group {
+  display: flex;
+  gap: 8px;
+}
+
+.input-action-group input {
+  flex: 1;
+}
+
+.pull-progress-container {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.pull-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pull-progress-status {
+  font-size: 0.72rem;
+  font-family: var(--font-sans);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 80%;
+}
+
+.pull-progress-percent {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.pull-progress-bar-wrapper {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  height: 6px;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  position: relative;
+}
+
+.pull-progress-bar {
+  background: var(--accent-primary);
+  height: 100%;
+  width: 0%;
+  transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+

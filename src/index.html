@@ -288,6 +288,28 @@
           <button class="btn-secondary" id="btn-test-connection">Test Connection</button>
           <span class="connection-status" id="connection-status"></span>
         </div>
+
+        <div class="modal-divider"></div>
+
+        <div class="settings-section-title">Model Downloader</div>
+        <div class="form-group">
+          <label for="settings-pull-model">Download Model from Ollama</label>
+          <div class="input-action-group">
+            <input type="text" id="settings-pull-model" placeholder="e.g., qwen2:0.5b or gemma:2b" />
+            <button class="btn-primary" id="btn-pull-model">Download</button>
+          </div>
+          <span class="form-hint">Fetches models directly from the <a href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">Ollama Library</a></span>
+        </div>
+
+        <div class="pull-progress-container" id="pull-progress-container" style="display: none;">
+          <div class="pull-progress-header">
+            <span class="pull-progress-status" id="pull-status-text">Ready</span>
+            <span class="pull-progress-percent" id="pull-percent-text">0%</span>
+          </div>
+          <div class="pull-progress-bar-wrapper">
+            <div class="pull-progress-bar" id="pull-progress-bar" style="width: 0%;"></div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="btn-cancel-settings">Cancel</button>
