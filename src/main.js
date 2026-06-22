@@ -6,6 +6,7 @@ import { initChat } from './js/chat.js';
 import { initSidebar } from './js/sidebar.js';
 import { initSettings } from './js/settings.js';
 import { initExport } from './js/export.js';
+import { initModels } from './js/models.js';
 import { initTheme, toggleTheme, getCurrentTheme } from './js/theme.js';
 import { initMarkdown } from './js/markdown.js';
 import { fetchModels, fetchSettings, saveSettings } from './js/storage.js';
@@ -31,6 +32,7 @@ async function init() {
   await initSidebar();
   initSettings();
   initExport();
+  initModels();
 
   // Theme toggle
   document.getElementById('btn-theme-toggle').addEventListener('click', async () => {

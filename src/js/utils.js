@@ -60,3 +60,45 @@ export function debounce(fn, ms) {
     timer = setTimeout(() => fn(...args), ms);
   };
 }
+
+/**
+ * Custom architectural confirmation dialog.
+ */
+export function showConfirm(message, confirmText = 'OK') {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirm-modal');
+    const msgEl = document.getElementById('confirm-message');
+    const btnOk = document.getElementById('btn-ok-confirm');
+    const btnCancel = document.getElementById('btn-cancel-confirm');
+    const btnClose = document.getElementById('btn-close-confirm');
+
+    if (!modal || !msgEl || !btnOk || !btnCancel || !btnClose) {
+      resolve(confirm(message));
+      return;
+    }
+
+    msgEl.textContent = message;
+    btnOk.textContent = confirmText;
+    modal.style.display = 'flex';
+
+    const cleanup = (result) => {
+      modal.style.display = 'none';
+      // Use cloneNode or manually remove listeners to avoid accumulation
+      const newBtnOk = btnOk.cloneNode(true);
+      btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+      
+      const newBtnCancel = btnCancel.cloneNode(true);
+      btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+      const newBtnClose = btnClose.cloneNode(true);
+      btnClose.parentNode.replaceChild(newBtnClose, btnClose);
+
+      resolve(result);
+    };
+
+    btnOk.addEventListener('click', () => cleanup(true));
+    btnCancel.addEventListener('click', () => cleanup(false));
+    btnClose.addEventListener('click', () => cleanup(false));
+  });
+}
+

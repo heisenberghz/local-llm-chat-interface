@@ -1533,10 +1533,42 @@ body::before {
   }
 }
 
-/* ---------- Settings Model Downloader UI ---------- */
+/* ---------- Model Command Center Dashboard CSS ---------- */
+.modal-lg {
+  max-width: 680px;
+  width: 95%;
+}
+
+.models-dashboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+/* Subtle blueprint drafting grid background overlay (4% opacity) inside the dashboard body */
+.models-dashboard-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(var(--border-default) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-default) 1px, transparent 1px);
+  background-size: 16px 16px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04; /* 4% opacity */
+}
+
+/* Ensure contents sit on top of background grid */
+.models-dashboard-body > * {
+  position: relative;
+  z-index: 1;
+}
+
 .modal-divider {
   border-top: 1px solid var(--border-default);
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .settings-section-title {
@@ -1606,5 +1638,149 @@ body::before {
   height: 100%;
   width: 0%;
   transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Inventory table styling */
+.dashboard-inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.inventory-count {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.dashboard-grid-container {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  background: var(--bg-primary);
+  overflow-x: auto;
+  max-height: 250px;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-default);
+  vertical-align: middle;
+}
+
+.dashboard-table th {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.dashboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+.model-name-cell {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.model-size-cell {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.model-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Status Indicator Dot */
+.status-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-indicator.active {
+  background-color: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+  animation: statusPulse 2s infinite ease-in-out;
+}
+
+.status-indicator.idle {
+  background-color: var(--text-tertiary);
+}
+
+@keyframes statusPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.model-actions-cell {
+  display: flex;
+  gap: 6px;
+}
+
+/* Small secondary actions buttons */
+.btn-secondary.sm,
+.btn-danger.sm {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-family: var(--font-sans);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  outline: none;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.btn-secondary.sm {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.btn-secondary.sm:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.btn-secondary.sm:disabled {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: rgba(63, 163, 150, 0.1); /* transparent accent */
+  cursor: default;
+}
+
+.btn-danger.sm {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.btn-danger.sm:hover {
+  color: #E57373; /* desaturated red */
+  border-color: #E57373;
+  background: rgba(229, 115, 115, 0.08);
 }
 

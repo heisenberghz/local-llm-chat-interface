@@ -76,5 +76,35 @@ router.post('/pull', async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/models
+ * Deletes a local model from Ollama.
+ */
+router.delete('/', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Model name is required' });
+    }
+
+    const ollamaRes = await fetch(ollamaUrl('/api/delete'), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    if (!ollamaRes.ok) {
+      const errorText = await ollamaRes.text();
+      return res.status(ollamaRes.status).json({ error: errorText || 'Failed to delete model' });
+    }
+
+    // Ollama delete returns 200 OK with no body. We return a JSON success message.
+    res.json({ success: true, message: `Model ${name} deleted successfully` });
+  } catch (err) {
+    console.error('Error deleting model:', err);
+    res.status(502).json({ error: `Cannot reach Ollama: ${err.message}` });
+  }
+});
+
 export default router;
 

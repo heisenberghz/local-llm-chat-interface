@@ -81,6 +81,14 @@
         </div>
 
         <div class="topbar-actions">
+          <button class="btn-icon" id="btn-models-dashboard" title="Model Command Center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="5"/>
+              <rect x="14" y="12" width="7" height="9"/>
+              <rect x="3" y="16" width="7" height="5"/>
+            </svg>
+          </button>
           <button class="btn-icon" id="btn-export" title="Export Chat">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -288,28 +296,6 @@
           <button class="btn-secondary" id="btn-test-connection">Test Connection</button>
           <span class="connection-status" id="connection-status"></span>
         </div>
-
-        <div class="modal-divider"></div>
-
-        <div class="settings-section-title">Model Downloader</div>
-        <div class="form-group">
-          <label for="settings-pull-model">Download Model from Ollama</label>
-          <div class="input-action-group">
-            <input type="text" id="settings-pull-model" placeholder="e.g., qwen2:0.5b or gemma:2b" />
-            <button class="btn-primary" id="btn-pull-model">Download</button>
-          </div>
-          <span class="form-hint">Fetches models directly from the <a href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">Ollama Library</a></span>
-        </div>
-
-        <div class="pull-progress-container" id="pull-progress-container" style="display: none;">
-          <div class="pull-progress-header">
-            <span class="pull-progress-status" id="pull-status-text">Ready</span>
-            <span class="pull-progress-percent" id="pull-percent-text">0%</span>
-          </div>
-          <div class="pull-progress-bar-wrapper">
-            <div class="pull-progress-bar" id="pull-progress-bar" style="width: 0%;"></div>
-          </div>
-        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary" id="btn-cancel-settings">Cancel</button>
@@ -344,6 +330,87 @@
             <span>Structured data, good for importing</span>
           </div>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model Command Center Modal -->
+  <div class="modal-overlay" id="models-modal" style="display:none">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2>Model Command Center</h2>
+        <button class="btn-icon" id="btn-close-models" title="Close Dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body models-dashboard-body">
+        
+        <div class="settings-section-title">Model Search & Registration</div>
+        <div class="form-group">
+          <label for="dashboard-pull-model">Download model from Ollama library</label>
+          <div class="input-action-group">
+            <input type="text" id="dashboard-pull-model" placeholder="e.g., llama3.2:1b or qwen2.5:1.5b" />
+            <button class="btn-primary" id="btn-dashboard-pull">Pull Model</button>
+          </div>
+          <span class="form-hint">Fetches weights directly from the <a href="https://ollama.com/library" target="_blank" rel="noopener noreferrer">Ollama Library</a></span>
+        </div>
+
+        <div class="pull-progress-container" id="dashboard-pull-progress" style="display: none;">
+          <div class="pull-progress-header">
+            <span class="pull-progress-status" id="dashboard-pull-status">Ready</span>
+            <span class="pull-progress-percent" id="dashboard-pull-percent">0%</span>
+          </div>
+          <div class="pull-progress-bar-wrapper">
+            <div class="pull-progress-bar" id="dashboard-pull-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="modal-divider"></div>
+
+        <div class="dashboard-inventory-header">
+          <span class="settings-section-title">Installed Models Registry</span>
+          <span class="inventory-count font-mono" id="inventory-count">0 models</span>
+        </div>
+        
+        <div class="dashboard-grid-container">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Model Name</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-model-list">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal -->
+  <div class="modal-overlay" id="confirm-modal" style="display:none; z-index: 1100;">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Confirm Action</h2>
+        <button class="btn-icon" id="btn-close-confirm" title="Close Dialog">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message" style="font-size: 0.85rem; line-height: 1.5; color: var(--text-primary); font-family: var(--font-sans);"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-confirm">Cancel</button>
+        <button class="btn-primary btn-danger sm" id="btn-ok-confirm" style="background: transparent; border: 1px solid var(--border-default); color: var(--text-secondary);">Delete</button>
       </div>
     </div>
   </div>
