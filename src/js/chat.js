@@ -64,6 +64,12 @@ export function initChat() {
 
   stopBtn().addEventListener('click', handleStop);
 
+  // Message actions (Edit & Regenerate)
+  const messagesContainer = messagesEl();
+  if (messagesContainer) {
+    messagesContainer.addEventListener('click', handleMessageActionClick);
+  }
+
   // Hint cards
   document.querySelectorAll('.hint-card').forEach((card) => {
     card.addEventListener('click', () => {
@@ -215,9 +221,11 @@ export async function renderConversation(conv) {
   // Hide welcome
   if (welcome) welcome.style.display = 'none';
 
+  let index = 0;
   for (const msg of conv.messages) {
-    const el = await createMessageEl(msg);
+    const el = await createMessageEl(msg, index);
     messages.appendChild(el);
+    index++;
   }
 
   scrollToBottom();
@@ -270,7 +278,7 @@ async function handleSend() {
   currentConversation.messages.push(userMsg);
 
   // Render user message
-  const userEl = await createMessageEl(userMsg);
+  const userEl = await createMessageEl(userMsg, currentConversation.messages.length - 1);
   messagesEl().appendChild(userEl);
   scrollToBottom();
 
@@ -289,6 +297,10 @@ async function handleSend() {
  */
 async function streamResponse(model) {
   isStreaming = true;
+  const messagesElement = messagesEl();
+  if (messagesElement) {
+    messagesElement.classList.add('is-streaming');
+  }
   currentRequestId = generateId();
   currentAbortController = new AbortController();
 
@@ -326,6 +338,7 @@ async function streamResponse(model) {
   // Create AI message element with loading indicator
   const aiMsgEl = document.createElement('div');
   aiMsgEl.className = 'message assistant';
+  aiMsgEl.setAttribute('data-index', currentConversation.messages.length);
   aiMsgEl.innerHTML = `
     <div class="message-avatar">
       <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter">
@@ -344,6 +357,13 @@ async function streamResponse(model) {
       <div class="message-meta">
         <span class="message-time"></span>
         <span class="message-tokens"></span>
+        <div class="message-actions">
+          <button class="btn-message-action btn-action-regenerate" title="Regenerate response">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -468,6 +488,10 @@ async function streamResponse(model) {
 
   // Reset state
   isStreaming = false;
+  const msgEl = messagesEl();
+  if (msgEl) {
+    msgEl.classList.remove('is-streaming');
+  }
   currentRequestId = null;
   currentAbortController = null;
   stopBtn().style.display = 'none';
@@ -492,11 +516,124 @@ async function handleStop() {
 }
 
 /**
+ * Handle clicking on Edit or Regenerate message action buttons.
+ */
+async function handleMessageActionClick(e) {
+  if (isStreaming) return;
+
+  const btn = e.target.closest('.btn-message-action');
+  if (!btn) return;
+
+  const messageEl = btn.closest('.message');
+  if (!messageEl) return;
+
+  const index = parseInt(messageEl.getAttribute('data-index'), 10);
+  if (isNaN(index)) return;
+
+  if (btn.classList.contains('btn-action-edit')) {
+    // User wants to edit a message
+    const msg = currentConversation.messages[index];
+    if (!msg) return;
+
+    // Reset other edits by re-rendering
+    await renderConversation(currentConversation);
+
+    // Find the message element again in the newly rendered list
+    const freshMessageEl = messagesEl().querySelector(`.message[data-index="${index}"]`);
+    if (!freshMessageEl) return;
+
+    const bubble = freshMessageEl.querySelector('.message-bubble');
+    if (!bubble) return;
+
+    const originalText = msg.content;
+    bubble.innerHTML = `
+      <div class="inline-edit-container">
+        <textarea class="inline-edit-textarea">${escapeHtml(originalText)}</textarea>
+        <div class="inline-edit-actions">
+          <button class="btn-mono btn-edit-cancel">CANCEL</button>
+          <button class="btn-mono btn-edit-save">SAVE & SUBMIT</button>
+        </div>
+      </div>
+    `;
+
+    const textarea = bubble.querySelector('.inline-edit-textarea');
+    const cancelBtn = bubble.querySelector('.btn-edit-cancel');
+    const saveBtn = bubble.querySelector('.btn-edit-save');
+
+    // Auto-resize
+    const resizeTextarea = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    };
+    resizeTextarea();
+    textarea.addEventListener('input', resizeTextarea);
+
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    textarea.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter' && !evt.shiftKey) {
+        evt.preventDefault();
+        saveBtn.click();
+      }
+    });
+
+    cancelBtn.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      renderConversation(currentConversation);
+    });
+
+    saveBtn.addEventListener('click', async (evt) => {
+      evt.stopPropagation();
+      const newText = textarea.value.trim();
+      if (!newText) return;
+
+      // Truncate subsequent messages
+      currentConversation.messages = currentConversation.messages.slice(0, index);
+
+      // Create updated user message
+      const updatedUserMsg = {
+        role: 'user',
+        content: newText,
+        timestamp: new Date().toISOString(),
+        tokens: countTokens(newText),
+      };
+      currentConversation.messages.push(updatedUserMsg);
+
+      const model = modelSelect().value || currentConversation.model;
+      await updateConversation(currentConversation.id, {
+        messages: currentConversation.messages,
+        model,
+      });
+
+      await renderConversation(currentConversation);
+      await streamResponse(model);
+    });
+  } else if (btn.classList.contains('btn-action-regenerate')) {
+    // Assistant response regenerate
+    // Truncate the assistant message and everything after it
+    currentConversation.messages = currentConversation.messages.slice(0, index);
+
+    const model = modelSelect().value || currentConversation.model;
+    await updateConversation(currentConversation.id, {
+      messages: currentConversation.messages,
+      model,
+    });
+
+    await renderConversation(currentConversation);
+    await streamResponse(model);
+  }
+}
+
+/**
  * Create a message DOM element.
  */
-async function createMessageEl(msg) {
+async function createMessageEl(msg, index) {
   const div = document.createElement('div');
   div.className = `message ${msg.role}`;
+  if (index !== undefined) {
+    div.setAttribute('data-index', index);
+  }
 
   const avatarHtml = msg.role === 'user' 
     ? `<div class="message-avatar">
@@ -531,6 +668,22 @@ async function createMessageEl(msg) {
       <div class="message-meta">
         <span class="message-time">${time}</span>
         <span class="message-tokens">${formatTokens(tokens)}</span>
+        <div class="message-actions">
+          ${msg.role === 'user' ? `
+            <button class="btn-message-action btn-action-edit" title="Edit message">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/>
+              </svg>
+            </button>
+          ` : `
+            <button class="btn-message-action btn-action-regenerate" title="Regenerate response">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+            </button>
+          `}
+        </div>
       </div>
     </div>
   `;
