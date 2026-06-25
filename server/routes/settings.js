@@ -11,6 +11,10 @@ const DEFAULTS = {
   defaultModel: '',
   theme: 'dark',
   systemPrompt: '',
+  ttsVoice: '',
+  ttsAutoread: false,
+  ttsRate: 1.0,
+  ttsPitch: 1.0,
 };
 
 const router = Router();

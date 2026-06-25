@@ -1912,4 +1912,82 @@ body::before {
   transform: scale(0.97);
 }
 
+/* ============================================================
+   VOICE INTERACTION STYLES (STT & TTS)
+   ============================================================ */
+
+/* Microphone button inside input-wrapper */
+.btn-voice-input {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.btn-voice-input:hover {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.btn-voice-input.listening {
+  border-color: var(--error);
+  color: var(--error);
+  background: rgba(207, 102, 121, 0.08);
+}
+
+/* Microphone pulse ring animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.btn-voice-input .pulse-ring {
+  display: none;
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--error);
+  border-radius: var(--radius-xs);
+}
+
+.btn-voice-input.listening .pulse-ring {
+  display: block;
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+/* Assistant speaker action button playing states */
+.btn-action-speak.playing {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  background: var(--accent-glow);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.btn-action-speak.playing .icon-speak {
+  display: none !important;
+}
+
+.btn-action-speak.playing .icon-stop-speak {
+  display: block !important;
+}
+
 

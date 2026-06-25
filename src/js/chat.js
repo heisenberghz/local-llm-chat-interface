@@ -2,7 +2,7 @@
  * Chat engine — sending messages, streaming responses, rendering bubbles.
  */
 
-import { sendChatMessage, stopChat, updateConversation } from './storage.js';
+import { sendChatMessage, stopChat, updateConversation, createConversation } from './storage.js';
 import { renderMarkdown, renderMarkdownSync } from './markdown.js';
 import { countTokens, formatTokens, generateId, timeAgo, debounce } from './utils.js';
 
@@ -10,6 +10,11 @@ let currentConversation = null;
 let isStreaming = false;
 let currentRequestId = null;
 let currentAbortController = null;
+
+// Voice parameters
+let speechRecognition = null;
+let isListening = false;
+let activeSpeakBtn = null;
 
 // DOM references
 const messagesEl = () => document.getElementById('messages');
@@ -39,6 +44,12 @@ export function setCurrentConversation(conv) {
 export function initChat() {
   const input = inputEl();
   const send = sendBtn();
+
+  // Microphone Speech-to-Text Button
+  const voiceBtn = document.getElementById('btn-voice-input');
+  if (voiceBtn) {
+    voiceBtn.addEventListener('click', toggleSpeechRecognition);
+  }
 
   // Auto-resize textarea
   input.addEventListener('input', () => {
@@ -204,6 +215,10 @@ export function loadChatParameters(conv) {
  * Render a full conversation's messages.
  */
 export async function renderConversation(conv) {
+  if (typeof window.speechSynthesis !== 'undefined') {
+    window.speechSynthesis.cancel();
+    resetSpeakButtonState();
+  }
   currentConversation = conv;
   loadChatParameters(conv);
   const messages = messagesEl();
@@ -257,9 +272,8 @@ async function handleSend() {
 
   // Create conversation if needed
   if (!currentConversation) {
-    const { createConversation: createConv } = await import('./storage.js');
     const title = text.slice(0, 50) + (text.length > 50 ? '...' : '');
-    currentConversation = await createConv({ title, model });
+    currentConversation = await createConversation({ title, model });
 
     // Notify sidebar to refresh
     window.dispatchEvent(new CustomEvent('conversation-created', { detail: currentConversation }));
@@ -358,6 +372,15 @@ async function streamResponse(model) {
         <span class="message-time"></span>
         <span class="message-tokens"></span>
         <div class="message-actions">
+          <button class="btn-message-action btn-action-speak" title="Speak response">
+            <svg class="icon-speak" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+            <svg class="icon-stop-speak" style="display:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+            </svg>
+          </button>
           <button class="btn-message-action btn-action-regenerate" title="Regenerate response">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -484,6 +507,15 @@ async function streamResponse(model) {
       messages: currentConversation.messages,
       parameters: currentConversation.parameters,
     });
+
+    // Auto-read response if enabled
+    const settings = JSON.parse(localStorage.getItem('localchat-settings') || '{}');
+    if (settings.ttsAutoread) {
+      const speakBtn = aiMsgEl.querySelector('.btn-action-speak');
+      if (speakBtn) {
+        handleSpeakToggle(fullText, speakBtn);
+      }
+    }
   }
 
   // Reset state
@@ -609,6 +641,13 @@ async function handleMessageActionClick(e) {
       await renderConversation(currentConversation);
       await streamResponse(model);
     });
+  } else if (btn.classList.contains('btn-action-speak')) {
+    // Text-to-Speech play/stop toggle
+    const bubble = messageEl.querySelector('.message-bubble');
+    if (bubble) {
+      const textToSpeak = bubble.textContent || bubble.innerText || '';
+      handleSpeakToggle(textToSpeak, btn);
+    }
   } else if (btn.classList.contains('btn-action-regenerate')) {
     // Assistant response regenerate
     // Truncate the assistant message and everything after it
@@ -677,6 +716,15 @@ async function createMessageEl(msg, index) {
               </svg>
             </button>
           ` : `
+            <button class="btn-message-action btn-action-speak" title="Speak response">
+              <svg class="icon-speak" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <svg class="icon-stop-speak" style="display:none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+              </svg>
+            </button>
             <button class="btn-message-action btn-action-regenerate" title="Regenerate response">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -746,4 +794,151 @@ function createWelcome() {
     <p>Your private, local AI assistant. Choose a model above and start chatting.</p>
   `;
   return div;
+}
+
+/**
+ * Speech Recognition (Speech-to-Text) functions
+ */
+function initSpeechRecognition() {
+  if (speechRecognition) return true;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    return false;
+  }
+
+  speechRecognition = new SpeechRecognition();
+  speechRecognition.continuous = true;
+  speechRecognition.interimResults = false;
+
+  speechRecognition.onresult = (e) => {
+    const input = inputEl();
+    const transcript = e.results[e.results.length - 1][0].transcript;
+    if (transcript) {
+      const space = input.value.trim() ? ' ' : '';
+      input.value = input.value.trim() + space + transcript.trim();
+      input.dispatchEvent(new Event('input')); // trigger resize and button state update
+    }
+  };
+
+  speechRecognition.onerror = (e) => {
+    console.error('Speech recognition error:', e.error);
+    if (e.error !== 'no-speech') {
+      stopSpeechRecognition();
+    }
+  };
+
+  speechRecognition.onend = () => {
+    if (isListening) {
+      try {
+        speechRecognition.start();
+      } catch {
+        // Safe catch if already running
+      }
+    }
+  };
+
+  return true;
+}
+
+function toggleSpeechRecognition() {
+  if (isListening) {
+    stopSpeechRecognition();
+  } else {
+    startSpeechRecognition();
+  }
+}
+
+function startSpeechRecognition() {
+  const supported = initSpeechRecognition();
+  if (!supported) {
+    alert('Voice input is not supported in this browser. Try Google Chrome or Microsoft Edge.');
+    return;
+  }
+
+  isListening = true;
+  const voiceBtn = document.getElementById('btn-voice-input');
+  if (voiceBtn) {
+    voiceBtn.classList.add('listening');
+  }
+
+  try {
+    speechRecognition.start();
+  } catch (err) {
+    console.error('Failed to start speech recognition:', err);
+  }
+}
+
+function stopSpeechRecognition() {
+  isListening = false;
+  const voiceBtn = document.getElementById('btn-voice-input');
+  if (voiceBtn) {
+    voiceBtn.classList.remove('listening');
+  }
+
+  if (speechRecognition) {
+    try {
+      speechRecognition.stop();
+    } catch (err) {
+      console.error('Failed to stop speech recognition:', err);
+    }
+  }
+}
+
+/**
+ * Speech Synthesis (Text-to-Speech) functions
+ */
+function handleSpeakToggle(text, buttonEl) {
+  if (typeof window.speechSynthesis === 'undefined') {
+    alert('Voice readout is not supported in this browser.');
+    return;
+  }
+
+  if (window.speechSynthesis.speaking && activeSpeakBtn === buttonEl) {
+    window.speechSynthesis.cancel();
+    resetSpeakButtonState();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  resetSpeakButtonState();
+
+  const settings = JSON.parse(localStorage.getItem('localchat-settings') || '{}');
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  utterance.rate = settings.ttsRate !== undefined ? settings.ttsRate : 1.0;
+  utterance.pitch = settings.ttsPitch !== undefined ? settings.ttsPitch : 1.0;
+
+  if (settings.ttsVoice) {
+    const voices = window.speechSynthesis.getVoices();
+    const selectedVoice = voices.find((v) => v.name === settings.ttsVoice);
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
+  }
+
+  utterance.onstart = () => {
+    activeSpeakBtn = buttonEl;
+    buttonEl.classList.add('playing');
+    buttonEl.setAttribute('title', 'Stop reading');
+  };
+
+  utterance.onend = () => {
+    resetSpeakButtonState();
+  };
+
+  utterance.onerror = (e) => {
+    console.error('Speech synthesis error:', e);
+    resetSpeakButtonState();
+  };
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function resetSpeakButtonState() {
+  if (activeSpeakBtn) {
+    activeSpeakBtn.classList.remove('playing');
+    activeSpeakBtn.setAttribute('title', 'Speak response');
+    activeSpeakBtn = null;
+  }
 }

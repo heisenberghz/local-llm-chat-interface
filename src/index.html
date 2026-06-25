@@ -183,6 +183,16 @@
             rows="1"
             autofocus
           ></textarea>
+          <!-- Microphone button for Speech-to-Text -->
+          <button class="btn-voice-input" id="btn-voice-input" title="Speech-to-Text (Voice Input)">
+            <svg class="icon-mic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <span class="pulse-ring"></span>
+          </button>
           <button class="btn-send" id="btn-send" title="Send message" disabled>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
@@ -295,6 +305,36 @@
         <div class="form-group">
           <button class="btn-secondary" id="btn-test-connection">Test Connection</button>
           <span class="connection-status" id="connection-status"></span>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="settings-section-title">Voice & Speech</div>
+        <div class="form-group" style="display: flex; flex-direction: row; gap: 16px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label for="settings-tts-voice">Voice Select</label>
+            <select id="settings-tts-voice" style="width: 100%;">
+              <option value="">Default System Voice</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; height: 38px;">
+            <input type="checkbox" id="settings-tts-autoread" style="cursor: pointer; width: auto;" />
+            <label for="settings-tts-autoread" style="margin-bottom: 0; cursor: pointer; font-size: 0.85rem;">Auto-Read Responses</label>
+          </div>
+        </div>
+        <div style="display: flex; gap: 16px; margin-top: 12px;">
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="settings-tts-rate" style="margin-bottom: 0;">Speech Rate</label>
+              <span id="val-tts-rate" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">1.0x</span>
+            </div>
+            <input type="range" id="settings-tts-rate" min="0.5" max="2" step="0.1" value="1.0" style="width: 100%; cursor: pointer;" />
+          </div>
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="settings-tts-pitch" style="margin-bottom: 0;">Speech Pitch</label>
+              <span id="val-tts-pitch" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">1.0</span>
+            </div>
+            <input type="range" id="settings-tts-pitch" min="0.5" max="2" step="0.1" value="1.0" style="width: 100%; cursor: pointer;" />
+          </div>
         </div>
       </div>
       <div class="modal-footer">

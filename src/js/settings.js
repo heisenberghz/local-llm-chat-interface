@@ -18,6 +18,14 @@ export function initSettings() {
   btnSave.addEventListener('click', handleSave);
   btnTest.addEventListener('click', testConnection);
 
+  // Range sliders UI updates
+  document.getElementById('settings-tts-rate').addEventListener('input', (e) => {
+    document.getElementById('val-tts-rate').textContent = `${e.target.value}x`;
+  });
+  document.getElementById('settings-tts-pitch').addEventListener('input', (e) => {
+    document.getElementById('val-tts-pitch').textContent = e.target.value;
+  });
+
   // Close on overlay click
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeSettings();
@@ -33,7 +41,25 @@ async function openSettings() {
     document.getElementById('settings-ollama-url').value = settings.ollamaUrl || 'http://localhost:11434';
     document.getElementById('settings-system-prompt').value = settings.systemPrompt || '';
 
+    // Populate default models list
     await populateDefaultModels(settings.defaultModel);
+
+    // Populate voices list
+    populateVoices(settings.ttsVoice);
+    if (window.speechSynthesis !== undefined) {
+      window.speechSynthesis.onvoiceschanged = () => populateVoices(settings.ttsVoice);
+    }
+
+    // Set voice form values
+    document.getElementById('settings-tts-autoread').checked = !!settings.ttsAutoread;
+    
+    const rateVal = settings.ttsRate !== undefined ? settings.ttsRate : 1.0;
+    document.getElementById('settings-tts-rate').value = rateVal;
+    document.getElementById('val-tts-rate').textContent = `${rateVal}x`;
+
+    const pitchVal = settings.ttsPitch !== undefined ? settings.ttsPitch : 1.0;
+    document.getElementById('settings-tts-pitch').value = pitchVal;
+    document.getElementById('val-tts-pitch').textContent = pitchVal;
 
     // Store in localStorage for chat module to read
     localStorage.setItem('localchat-settings', JSON.stringify(settings));
@@ -43,6 +69,27 @@ async function openSettings() {
 
   // Clear status
   document.getElementById('connection-status').textContent = '';
+}
+
+function populateVoices(selectedVoiceName) {
+  const voiceSelect = document.getElementById('settings-tts-voice');
+  if (!voiceSelect) return;
+
+  if (typeof window.speechSynthesis === 'undefined') {
+    voiceSelect.innerHTML = '<option value="">Not supported in browser</option>';
+    return;
+  }
+
+  const voices = window.speechSynthesis.getVoices();
+  voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
+
+  for (const voice of voices) {
+    const opt = document.createElement('option');
+    opt.value = voice.name;
+    opt.textContent = `${voice.name} (${voice.lang})`;
+    if (voice.name === selectedVoiceName) opt.selected = true;
+    voiceSelect.appendChild(opt);
+  }
 }
 
 async function populateDefaultModels(selectedModelName) {
@@ -71,6 +118,10 @@ async function handleSave() {
     ollamaUrl: document.getElementById('settings-ollama-url').value.trim(),
     defaultModel: document.getElementById('settings-default-model').value,
     systemPrompt: document.getElementById('settings-system-prompt').value.trim(),
+    ttsVoice: document.getElementById('settings-tts-voice').value,
+    ttsAutoread: document.getElementById('settings-tts-autoread').checked,
+    ttsRate: parseFloat(document.getElementById('settings-tts-rate').value),
+    ttsPitch: parseFloat(document.getElementById('settings-tts-pitch').value),
   };
 
   try {
