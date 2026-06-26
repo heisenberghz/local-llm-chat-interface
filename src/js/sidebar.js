@@ -22,6 +22,12 @@ const overlay = () => document.getElementById('sidebar-overlay');
 const contextMenu = () => document.getElementById('context-menu');
 
 export async function initSidebar() {
+  // Load saved sidebar state
+  const isCollapsed = localStorage.getItem('aether-sidebar-collapsed') === 'true';
+  if (isCollapsed) {
+    sidebar().classList.add('collapsed');
+  }
+
   // Load conversations
   await refreshConversations();
 
@@ -32,6 +38,12 @@ export async function initSidebar() {
   searchInput().addEventListener('input', (e) => {
     renderConversationList(e.target.value);
   });
+
+  // Desktop sidebar toggle
+  const btnToggle = document.getElementById('btn-sidebar-toggle');
+  if (btnToggle) {
+    btnToggle.addEventListener('click', toggleDesktopSidebar);
+  }
 
   // Mobile menu
   document.getElementById('btn-menu').addEventListener('click', toggleMobileSidebar);
@@ -296,6 +308,12 @@ function toggleMobileSidebar() {
 function closeMobileSidebar() {
   sidebar().classList.remove('open');
   overlay().classList.remove('visible');
+}
+
+function toggleDesktopSidebar() {
+  const sidebarEl = sidebar();
+  const isCollapsed = sidebarEl.classList.toggle('collapsed');
+  localStorage.setItem('aether-sidebar-collapsed', isCollapsed);
 }
 
 function escapeHtml(str) {
