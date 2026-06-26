@@ -668,7 +668,11 @@ async function renderModelDetails(id, isLocal = false) {
               <div class="quantization-selector-row">
                 <span class="format-badge">GGUF</span>
                 <select id="model-quantization-select">
-                  ${model.quantizations.map(q => `<option value="${q.tag}" data-size="${q.size}">${q.name} (${q.size})</option>`).join('')}
+                  ${model.quantizations.map(q => {
+                    const sharded = isShardedGGUF(q.name);
+                    const label = sharded ? `[SHARDED] ${q.name}` : q.name;
+                    return `<option value="${q.tag}" data-name="${q.name}" data-size="${q.size}" data-sharded="${sharded}">${label} (${q.size})</option>`;
+                  }).join('')}
                 </select>
                 <span class="file-size font-mono" id="selected-file-size">${model.quantizations[0].size}</span>
               </div>
@@ -731,16 +735,52 @@ async function renderModelDetails(id, isLocal = false) {
     const btnDownload = document.getElementById('btn-model-download');
 
     if (select && sizeSpan && btnDownload) {
-      select.addEventListener('change', () => {
+      const updateDownloadButtonState = () => {
         const option = select.options[select.selectedIndex];
+        if (!option) return;
         const sizeText = option.getAttribute('data-size');
         const tagText = option.value;
+        const isSharded = option.getAttribute('data-sharded') === 'true';
         sizeSpan.textContent = sizeText;
-        btnDownload.innerHTML = `
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download ${tagText} (${sizeText})
-        `;
-      });
+
+        // Check for sharded warning container
+        let warningEl = document.getElementById('sharded-warning-box');
+        if (isSharded) {
+          if (!warningEl) {
+            warningEl = document.createElement('div');
+            warningEl.id = 'sharded-warning-box';
+            warningEl.className = 'fallback-warning-box';
+            warningEl.style.borderColor = 'var(--error)';
+            warningEl.innerHTML = `
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: var(--error);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>This file is sharded (part of a split GGUF archive). Ollama does not support downloading sharded GGUFs directly from Hugging Face yet. Please select a single-file quantization or check repository files on Hugging Face.</span>
+            `;
+            // Insert it before the download action row
+            const actionRow = btnDownload.closest('.download-action-row') || btnDownload.parentElement;
+            actionRow.parentNode.insertBefore(warningEl, actionRow);
+          }
+          btnDownload.disabled = true;
+          btnDownload.style.opacity = '0.5';
+          btnDownload.style.cursor = 'not-allowed';
+          btnDownload.style.pointerEvents = 'none';
+          btnDownload.innerHTML = `Sharded GGUF (Unsupported)`;
+        } else {
+          if (warningEl) {
+            warningEl.remove();
+          }
+          btnDownload.disabled = false;
+          btnDownload.style.opacity = '';
+          btnDownload.style.cursor = '';
+          btnDownload.style.pointerEvents = '';
+          btnDownload.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download ${tagText} (${sizeText})
+          `;
+        }
+      };
+
+      select.addEventListener('change', updateDownloadButtonState);
+      updateDownloadButtonState();
     }
 
     if (btnDownload && hasQuants) {
@@ -1114,4 +1154,14 @@ function timeAgo(dateStr) {
   const diffMonths = Math.floor(diffDays / 30);
   if (diffMonths === 1) return '1 month ago';
   return `${diffMonths} months ago`;
+}
+
+/**
+ * Detects whether a filename represents a sharded GGUF file
+ */
+function isShardedGGUF(filename) {
+  const lower = filename.toLowerCase();
+  return (lower.includes('-of-') && /\d+-of-\d+/.test(lower)) || 
+         lower.includes('split') || 
+         lower.includes('shard');
 }
