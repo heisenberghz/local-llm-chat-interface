@@ -229,18 +229,33 @@ function startRename(id, el) {
 async function handleDelete(id) {
   if (!confirm('Delete this conversation?')) return;
 
+  // Save current state for rollback
+  const previousConversations = [...conversations];
+  const wasActive = activeId === id;
+
+  // Optimistically update list instantly
+  conversations = conversations.filter((c) => c.id !== id);
+  renderConversationList();
+
+  if (wasActive) {
+    activeId = null;
+    setCurrentConversation(null);
+    handleNewChat();
+  }
+
   try {
     await deleteConversation(id);
-    conversations = conversations.filter((c) => c.id !== id);
-    renderConversationList();
-
-    if (activeId === id) {
-      activeId = null;
-      setCurrentConversation(null);
-      handleNewChat();
-    }
   } catch (err) {
     console.error('Failed to delete:', err);
+    alert('Failed to delete conversation: ' + err.message);
+    
+    // Rollback state on failure
+    conversations = previousConversations;
+    renderConversationList();
+    if (wasActive) {
+      activeId = id;
+      openConversation(id);
+    }
   }
 }
 

@@ -30,7 +30,7 @@
   /* Animations & Transitions */
   --transition-fast: 100ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---------- Dark Theme (Obsidian & Copper-Zinc) ---------- */
@@ -256,11 +256,13 @@ body::before {
   font-size: 0.85rem;
   font-family: var(--font-sans);
   outline: none;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .sidebar-search input:focus {
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary), 0 4px 12px var(--accent-glow);
+  transform: translateY(-1px);
 }
 
 .sidebar-search input::placeholder {
@@ -1082,13 +1084,15 @@ body::before {
   font-size: 0.875rem;
   font-family: var(--font-sans);
   outline: none;
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary), 0 4px 12px var(--accent-glow);
+  transform: translateY(-1px);
 }
 
 .form-group textarea {
@@ -1988,6 +1992,88 @@ body::before {
 
 .btn-action-speak.playing .icon-stop-speak {
   display: block !important;
+}
+
+/* ============================================================
+   FLUID WORKSPACE STATES & ANIMATIONS
+   ============================================================ */
+
+/* Pulsing border animation for model download loader */
+@keyframes border-pulse {
+  0% {
+    border-color: var(--border-default);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  50% {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  100% {
+    border-color: var(--border-default);
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+}
+
+.pull-progress-container {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs);
+  padding: 10px;
+  transition: all var(--transition-base);
+  animation: border-pulse 2s infinite ease-in-out;
+}
+
+/* Shimmering Skeleton Loader */
+.skeleton-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  padding: 4px 0;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(140, 149, 165, 0.12), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Streaming gradient mask for smooth text appearance */
+.is-streaming .message.assistant:last-child .message-bubble {
+  mask-image: linear-gradient(to bottom, black 80%, rgba(0,0,0,0.3) 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, rgba(0,0,0,0.3) 95%, transparent 100%);
+}
+
+/* Streaming cursor caret */
+.is-streaming .message.assistant:last-child .message-bubble > *:last-child::after {
+  content: '▋';
+  display: inline-block;
+  color: var(--accent-primary);
+  margin-left: 4px;
+  animation: cursor-flash 0.8s infinite steps(2);
+  vertical-align: middle;
+}
+
+@keyframes cursor-flash {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 

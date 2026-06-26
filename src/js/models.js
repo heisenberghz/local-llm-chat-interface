@@ -140,6 +140,29 @@ async function handleDeleteModel(modelName) {
     return;
   }
 
+  // Find the row and fade/remove it immediately (Optimistic UI)
+  const tbody = document.getElementById('dashboard-model-list');
+  const rows = tbody ? Array.from(tbody.querySelectorAll('tr')) : [];
+  const targetRow = rows.find(row => {
+    const cell = row.querySelector('.model-name-cell');
+    return cell && cell.textContent.trim() === modelName;
+  });
+
+  if (targetRow) {
+    targetRow.style.transition = 'opacity 200ms ease';
+    targetRow.style.opacity = '0';
+    setTimeout(() => targetRow.remove(), 200);
+  }
+
+  // Optimistically decrement count
+  const countEl = document.getElementById('inventory-count');
+  if (countEl) {
+    const currentCount = parseInt(countEl.textContent, 10);
+    if (!isNaN(currentCount) && currentCount > 0) {
+      countEl.textContent = `${currentCount - 1} model${(currentCount - 1) !== 1 ? 's' : ''} registered`;
+    }
+  }
+
   try {
     const res = await fetch('/api/models', {
       method: 'DELETE',
@@ -160,12 +183,12 @@ async function handleDeleteModel(modelName) {
 
     // Refresh model list in topbar
     window.dispatchEvent(new CustomEvent('settings-saved'));
-    // Refresh inventory grid
-    refreshModelsInventory();
 
   } catch (err) {
     alert(`Failed to delete model: ${err.message}`);
     console.error('Delete model error:', err);
+    // Reload model list since optimistic delete failed
+    refreshModelsInventory();
   }
 }
 

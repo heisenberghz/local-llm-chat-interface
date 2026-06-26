@@ -16,6 +16,9 @@ let speechRecognition = null;
 let isListening = false;
 let activeSpeakBtn = null;
 
+// Scroll parameters
+let isNearBottom = true;
+
 // DOM references
 const messagesEl = () => document.getElementById('messages');
 const containerEl = () => document.getElementById('messages-container');
@@ -142,6 +145,16 @@ export function initChat() {
   if (systemTextarea) {
     systemTextarea.addEventListener('input', debounce(saveCurrentChatParameters, 500));
   }
+
+  // Magnetic scroll checking
+  const container = containerEl();
+  if (container) {
+    container.addEventListener('scroll', () => {
+      const threshold = 80;
+      const distanceFromBottom = container.scrollHeight - container.clientHeight - container.scrollTop;
+      isNearBottom = distanceFromBottom <= threshold;
+    });
+  }
 }
 
 /**
@@ -250,6 +263,7 @@ export async function renderConversation(conv) {
  * Handle sending a message.
  */
 async function handleSend() {
+  isNearBottom = true;
   const input = inputEl();
   const text = input.value.trim();
   if (!text) return;
@@ -364,8 +378,9 @@ async function streamResponse(model) {
     </div>
     <div class="message-content">
       <div class="message-bubble">
-        <div class="typing-indicator">
-          <span></span><span></span><span></span>
+        <div class="skeleton-loader">
+          <div class="skeleton-line" style="width: 85%;"></div>
+          <div class="skeleton-line" style="width: 65%;"></div>
         </div>
       </div>
       <div class="message-meta">
@@ -620,6 +635,7 @@ async function handleMessageActionClick(e) {
       const newText = textarea.value.trim();
       if (!newText) return;
 
+      isNearBottom = true;
       // Truncate subsequent messages
       currentConversation.messages = currentConversation.messages.slice(0, index);
 
@@ -650,6 +666,7 @@ async function handleMessageActionClick(e) {
     }
   } else if (btn.classList.contains('btn-action-regenerate')) {
     // Assistant response regenerate
+    isNearBottom = true;
     // Truncate the assistant message and everything after it
     currentConversation.messages = currentConversation.messages.slice(0, index);
 
@@ -765,6 +782,7 @@ function updateTokenCount(text) {
 }
 
 function scrollToBottom() {
+  if (!isNearBottom) return;
   const container = containerEl();
   requestAnimationFrame(() => {
     container.scrollTop = container.scrollHeight;
