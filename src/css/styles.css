@@ -432,7 +432,7 @@ body::before {
   z-index: 10;
 }
 
-.mobile-menu {
+.btn-icon.mobile-menu {
   display: none;
 }
 
@@ -1295,7 +1295,7 @@ body::before {
     display: block;
   }
 
-  .mobile-menu {
+  .btn-icon.mobile-menu {
     display: flex;
   }
 
