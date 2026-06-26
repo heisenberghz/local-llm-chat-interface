@@ -538,8 +538,9 @@ async function renderModelDetails(id, isLocal = false) {
         const specs = parseSpecsFromHFTags(hfData);
 
         // Map files ending in .gguf robustly (handles rfilename, path, and subdirectory files!)
-        const ggufFiles = (hfData.siblingFiles || [])
-          .map(f => f.rfilename || f.path || '')
+        const siblings = hfData.siblings || hfData.siblingFiles || [];
+        const ggufFiles = siblings
+          .map(f => f.rfilename || f.path || f.name || '')
           .filter(name => name && name.toLowerCase().endsWith('.gguf'));
 
         // Construct quant list
@@ -682,8 +683,9 @@ async function renderModelDetails(id, isLocal = false) {
                 </button>
               </div>
             ` : `
-              <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding: 10px;" id="no-quantization-warning">
-                No specific quantization files found. Please check repository source.
+              <div class="fallback-warning-box" id="no-quantization-warning">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: var(--accent-primary);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>No specific quantization files found. Please check repository source.</span>
               </div>
               <div class="download-action-row">
                 <button class="btn-primary" id="btn-model-download" disabled style="opacity: 0.5; cursor: not-allowed; width: 100%;">
@@ -779,10 +781,10 @@ async function loadReadmeContent(modelId, readmeText) {
       container.innerHTML = rendered;
     } catch (e) {
       console.error('README render error:', e);
-      container.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.82rem;">Failed to format repository README.</p>`;
+      container.innerHTML = `<div class="fallback-warning-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: var(--accent-primary);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Failed to format repository README.</div>`;
     }
   } else {
-    container.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.82rem;">No README document found for this repository. Please check repository source on Hugging Face.</p>`;
+    container.innerHTML = `<div class="fallback-warning-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; color: var(--accent-primary);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>No README document found for this repository. Please check repository source on Hugging Face.</div>`;
   }
 }
 
@@ -805,6 +807,8 @@ async function handleHubDownload(modelId, tag) {
   downloadingModelId = modelId;
   activeDownloadingTag = tag;
   btnDownload.disabled = true;
+  const select = document.getElementById('model-quantization-select');
+  if (select) select.disabled = true;
 
   if (progressContainer) progressContainer.style.display = 'flex';
   if (statusText) statusText.textContent = 'Contacting local Ollama...';
@@ -903,6 +907,8 @@ async function handleHubDownload(modelId, tag) {
     activeDownloadingTag = null;
   } finally {
     btnDownload.disabled = false;
+    const select = document.getElementById('model-quantization-select');
+    if (select) select.disabled = false;
     currentPullReader = null;
     // Re-render lists
     renderModelList(searchInput ? searchInput.value.trim() : '');

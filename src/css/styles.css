@@ -2513,4 +2513,38 @@ body::before {
   100% { opacity: 1; }
 }
 
+/* Fallback Warning Box */
+.fallback-warning-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.fallback-warning-box span {
+  flex: 1;
+}
+
+/* Disabled state styling for primary buttons to ensure premium desaturated look */
+.btn-primary[disabled],
+.btn-primary[disabled]:hover,
+.btn-primary[disabled]:active {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-tertiary) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+
 

@@ -132,30 +132,45 @@ router.get('/details', async (req, res) => {
 
     const hfData = await hfRes.json();
     const branch = hfData.defaultBranch || 'main';
+    const commitOrBranch = hfData.sha || branch;
 
-    // 2. Fetch files tree to obtain exact sizes (fail-safe)
+    // 2. Fetch files tree to obtain exact sizes (fail-safe with branch fallbacks)
     let fileSizes = {};
-    try {
-      const treeRes = await fetch(`https://huggingface.co/api/models/${id}/tree/${branch}`, {
-        headers: { 'User-Agent': 'Aether-Local-LLM-Workspace' },
-        signal: AbortSignal.timeout(3000)
-      });
-      if (treeRes.ok) {
-        const files = await treeRes.json();
-        files.forEach(f => {
-          if (f.path && f.size) {
-            fileSizes[f.path] = f.size;
-          }
+    const treeUrls = [
+      `https://huggingface.co/api/models/${id}/tree/${commitOrBranch}`,
+      `https://huggingface.co/api/models/${id}/tree/${branch}`,
+      `https://huggingface.co/api/models/${id}/tree/main`,
+      `https://huggingface.co/api/models/${id}/tree/master`
+    ];
+
+    for (const treeUrl of treeUrls) {
+      try {
+        const treeRes = await fetch(treeUrl, {
+          headers: { 'User-Agent': 'Aether-Local-LLM-Workspace' },
+          signal: AbortSignal.timeout(3000)
         });
+        if (treeRes.ok) {
+          const files = await treeRes.json();
+          if (Array.isArray(files)) {
+            files.forEach(f => {
+              if (f.path && f.size) {
+                fileSizes[f.path] = f.size;
+              }
+            });
+            break; // Successfully fetched
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to fetch tree sizes from ${treeUrl}:`, e.message);
       }
-    } catch (e) {
-      console.warn('Failed to fetch tree sizes:', e.message);
     }
 
-    // 3. Fetch raw README content (fail-safe)
+    // 3. Fetch raw README content (fail-safe with sequential URL fallbacks)
     let readmeText = '';
     const readmeUrls = [
+      `https://huggingface.co/${id}/raw/${commitOrBranch}/README.md`,
       `https://huggingface.co/${id}/raw/${branch}/README.md`,
+      `https://huggingface.co/${id}/raw/main/README.md`,
       `https://huggingface.co/${id}/raw/master/README.md`
     ];
 
