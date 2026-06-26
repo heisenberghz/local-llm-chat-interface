@@ -69,7 +69,8 @@ async function loadModels() {
       const opt = document.createElement('option');
       opt.value = m.name;
       const size = m.size ? ` (${formatSize(m.size)})` : '';
-      opt.textContent = `${m.name}${size}`;
+      const parsedName = m.name.replace(/^(hf\.co|huggingface\.co)\//i, '').replace(/-gguf(?=:|$)/i, '');
+      opt.textContent = `${parsedName}${size}`;
       if (m.name === settings.defaultModel) opt.selected = true;
       select.appendChild(opt);
     }

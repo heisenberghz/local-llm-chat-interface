@@ -243,20 +243,22 @@ async function renderModelList(query = '') {
       div.className = `model-list-item ${selectedModelId === m.name ? 'selected' : ''}`;
       div.setAttribute('data-id', m.name);
 
+      const parsed = parseInstalledModelName(m.name);
       div.innerHTML = `
-        <div class="model-item-logo">${m.name.charAt(0).toUpperCase()}</div>
+        <div class="model-item-logo">${parsed.modelName.charAt(0).toUpperCase()}</div>
         <div class="model-item-content">
           <div class="model-item-header">
-            <span class="model-item-name">${m.name}</span>
+            <span class="model-item-name" title="${m.name}">${parsed.modelName}</span>
           </div>
-          <div class="model-item-desc">${sizeGB}</div>
+          <div class="model-item-desc">${parsed.author}</div>
           <div class="model-item-footer">
             <span class="model-item-stats">
               <span class="status-indicator ${isActive ? 'active' : 'idle'}"></span>
               <span>${isActive ? 'Active' : 'Idle'}</span>
             </span>
             <div class="model-item-tags">
-              <span class="model-item-tag">Local</span>
+              <span class="model-item-tag">${parsed.author === 'Local' ? 'Native' : 'Hub'}</span>
+              <span class="model-item-tag">${sizeGB}</span>
             </div>
           </div>
         </div>
@@ -411,7 +413,8 @@ async function renderModelDetails(id, isLocal = false) {
     const isActive = model.name === activeModelName;
     const sizeGB = model.size ? formatSize(model.size) : 'Unknown size';
 
-    // Parse specs from name
+    // Parse specs and clean name
+    const parsed = parseInstalledModelName(model.name);
     const specs = parseSpecsFromLocalName(model.name);
 
     details.innerHTML = `
@@ -422,7 +425,8 @@ async function renderModelDetails(id, isLocal = false) {
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
               <line x1="9" y1="3" x2="9" y2="21"/>
             </svg>
-            <h3 class="models-details-id" title="${model.name}">${model.name}</h3>
+            <h3 class="models-details-id" title="${model.name}">${parsed.modelName}</h3>
+            <span style="font-size: 0.72rem; color: var(--text-tertiary); margin-left: 8px; font-family: var(--font-mono)">${parsed.author}</span>
           </div>
         </div>
 
@@ -1164,4 +1168,23 @@ function isShardedGGUF(filename) {
   return (lower.includes('-of-') && /\d+-of-\d+/.test(lower)) || 
          lower.includes('split') || 
          lower.includes('shard');
+}
+
+/**
+ * Parses and cleans an installed model name to extract human-readable parts.
+ */
+function parseInstalledModelName(name) {
+  let displayName = name.replace(/^(hf\.co|huggingface\.co)\//i, '');
+  displayName = displayName.replace(/-gguf(?=:|$)/i, '');
+  
+  let author = 'Local';
+  let modelName = displayName;
+  
+  const slashIdx = displayName.indexOf('/');
+  if (slashIdx !== -1) {
+    author = displayName.substring(0, slashIdx);
+    modelName = displayName.substring(slashIdx + 1);
+  }
+  
+  return { displayName, author, modelName };
 }
