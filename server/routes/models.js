@@ -106,5 +106,84 @@ router.delete('/', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/models/details
+ * Fetches Hugging Face model metadata, files tree, and README raw text.
+ */
+router.get('/details', async (req, res) => {
+  const { id } = req.query;
+  if (!id) {
+    return res.status(400).json({ error: 'Model ID is required' });
+  }
+
+  try {
+    // 1. Fetch model metadata (request siblings=true to fetch file lists)
+    const modelUrl = `https://huggingface.co/api/models/${id}?siblings=true`;
+    const hfRes = await fetch(modelUrl, {
+      headers: { 'User-Agent': 'Aether-Local-LLM-Workspace' }
+    });
+
+    if (!hfRes.ok) {
+      if (hfRes.status === 401 || hfRes.status === 403) {
+        return res.status(403).json({ error: 'Repository is gated or private. Please check repository source on Hugging Face.' });
+      }
+      return res.status(hfRes.status).json({ error: `Hugging Face returned status ${hfRes.status}` });
+    }
+
+    const hfData = await hfRes.json();
+    const branch = hfData.defaultBranch || 'main';
+
+    // 2. Fetch files tree to obtain exact sizes (fail-safe)
+    let fileSizes = {};
+    try {
+      const treeRes = await fetch(`https://huggingface.co/api/models/${id}/tree/${branch}`, {
+        headers: { 'User-Agent': 'Aether-Local-LLM-Workspace' },
+        signal: AbortSignal.timeout(3000)
+      });
+      if (treeRes.ok) {
+        const files = await treeRes.json();
+        files.forEach(f => {
+          if (f.path && f.size) {
+            fileSizes[f.path] = f.size;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to fetch tree sizes:', e.message);
+    }
+
+    // 3. Fetch raw README content (fail-safe)
+    let readmeText = '';
+    const readmeUrls = [
+      `https://huggingface.co/${id}/raw/${branch}/README.md`,
+      `https://huggingface.co/${id}/raw/master/README.md`
+    ];
+
+    for (const url of readmeUrls) {
+      try {
+        const readmeRes = await fetch(url, {
+          headers: { 'User-Agent': 'Aether-Local-LLM-Workspace' },
+          signal: AbortSignal.timeout(3000)
+        });
+        if (readmeRes.ok) {
+          readmeText = await readmeRes.text();
+          break;
+        }
+      } catch (e) {
+        console.warn(`Failed to fetch readme from ${url}:`, e.message);
+      }
+    }
+
+    res.json({
+      metadata: hfData,
+      fileSizes,
+      readme: readmeText
+    });
+  } catch (err) {
+    console.error('Error fetching model details:', err);
+    res.status(502).json({ error: `Failed to fetch repository details: ${err.message}` });
+  }
+});
+
 export default router;
 

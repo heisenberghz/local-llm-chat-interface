@@ -495,7 +495,6 @@ async function renderModelDetails(id, isLocal = false) {
 
     if (btnLoad) btnLoad.addEventListener('click', () => handleLoadModel(model.name));
     if (btnDelete) btnDelete.addEventListener('click', () => handleDeleteModel(model.name));
-
   } else {
     // Render explore model card (fetching from HF)
     details.innerHTML = `
@@ -511,37 +510,37 @@ async function renderModelDetails(id, isLocal = false) {
       </div>
     `;
 
-    // Try to load model details from local curated cache or Hugging Face API
+    // Try to load model details from local curated cache or Hugging Face API details proxy
     let model = CURATED_MODELS.find(m => m.id === id);
     let hfData = null;
     let fileSizes = {};
+    let readmeText = '';
 
     if (!model) {
       try {
-        // Fetch details from Hugging Face
-        const res = await fetch(`https://huggingface.co/api/models/${id}`);
-        if (!res.ok) throw new Error('Repo fetch failed');
-        hfData = await res.json();
+        // Fetch details from our backend proxy endpoint
+        const res = await fetch(`/api/models/details?id=${encodeURIComponent(id)}`);
+        if (!res.ok) {
+          let errText = 'Repository details fetch failed';
+          try {
+            const errJson = await res.json();
+            errText = errJson.error || errText;
+          } catch {}
+          throw new Error(errText);
+        }
+
+        const detailsData = await res.json();
+        hfData = detailsData.metadata;
+        fileSizes = detailsData.fileSizes || {};
+        readmeText = detailsData.readme || '';
         
         // Parse metadata tags
         const specs = parseSpecsFromHFTags(hfData);
 
-        // Map files ending in .gguf
-        const branch = hfData.defaultBranch || 'main';
+        // Map files ending in .gguf robustly (handles rfilename, path, and subdirectory files!)
         const ggufFiles = (hfData.siblingFiles || [])
-          .map(f => f.rfilename)
-          .filter(name => name.endsWith('.gguf'));
-
-        // Query tree to obtain file sizes
-        try {
-          const treeRes = await fetch(`https://huggingface.co/api/models/${id}/tree/${branch}`);
-          if (treeRes.ok) {
-            const files = await treeRes.json();
-            files.forEach(f => {
-              if (f.path && f.size) fileSizes[f.path] = f.size;
-            });
-          }
-        } catch {}
+          .map(f => f.rfilename || f.path || '')
+          .filter(name => name && name.toLowerCase().endsWith('.gguf'));
 
         // Construct quant list
         const quants = ggufFiles.map(filename => {
@@ -565,18 +564,34 @@ async function renderModelDetails(id, isLocal = false) {
           format: 'GGUF',
           capabilities: specs.capabilities,
           quantizations: quants,
-          readme: '' // to be loaded next
+          readme: readmeText
         };
       } catch (err) {
         console.error('Failed to resolve HF model details:', err);
-        details.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
-          Failed to fetch model details from Hugging Face. Ensure you are connected to the internet.
-        </div>`;
+        details.innerHTML = `
+          <div style="padding: 40px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px;">
+            <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 320px; line-height: 1.5;">
+              Failed to fetch repository details: ${err.message}
+            </p>
+            <button class="btn-primary sm" id="btn-details-retry" style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase;">
+              Retry Connection
+            </button>
+          </div>
+        `;
+        
+        // Bind retry button
+        const btnRetry = document.getElementById('btn-details-retry');
+        if (btnRetry) {
+          btnRetry.addEventListener('click', () => {
+            renderModelDetails(id, false);
+          });
+        }
         return;
       }
     }
 
     // Now render details markup
+    const hasQuants = model.quantizations && model.quantizations.length > 0;
     details.innerHTML = `
       <div class="models-details-wrapper">
         <div class="models-details-title-row">
@@ -648,7 +663,7 @@ async function renderModelDetails(id, isLocal = false) {
             <span>Download Options</span>
           </div>
           <div class="download-panel-body">
-            ${model.quantizations && model.quantizations.length > 0 ? `
+            ${hasQuants ? `
               <div class="quantization-selector-row">
                 <span class="format-badge">GGUF</span>
                 <select id="model-quantization-select">
@@ -663,12 +678,17 @@ async function renderModelDetails(id, isLocal = false) {
               <div class="download-action-row">
                 <button class="btn-primary" id="btn-model-download">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Download ${model.quantizations[0].size}
+                  Download ${model.quantizations[0].tag} (${model.quantizations[0].size})
                 </button>
               </div>
             ` : `
-              <div style="font-size: 0.8rem; color: var(--text-tertiary); text-align: center; padding: 10px;">
-                No quantization files available in repository.
+              <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; padding: 10px;" id="no-quantization-warning">
+                No specific quantization files found. Please check repository source.
+              </div>
+              <div class="download-action-row">
+                <button class="btn-primary" id="btn-model-download" disabled style="opacity: 0.5; cursor: not-allowed; width: 100%;">
+                  Download Unavailable
+                </button>
               </div>
             `}
 
@@ -703,7 +723,7 @@ async function renderModelDetails(id, isLocal = false) {
       </div>
     `;
 
-    // Wire select triggers
+    // Wire select triggers and download logic reactively
     const select = document.getElementById('model-quantization-select');
     const sizeSpan = document.getElementById('selected-file-size');
     const btnDownload = document.getElementById('btn-model-download');
@@ -712,15 +732,16 @@ async function renderModelDetails(id, isLocal = false) {
       select.addEventListener('change', () => {
         const option = select.options[select.selectedIndex];
         const sizeText = option.getAttribute('data-size');
+        const tagText = option.value;
         sizeSpan.textContent = sizeText;
         btnDownload.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download ${sizeText}
+          Download ${tagText} (${sizeText})
         `;
       });
     }
 
-    if (btnDownload) {
+    if (btnDownload && hasQuants) {
       btnDownload.addEventListener('click', () => {
         if (select) {
           const tag = select.value;
@@ -740,41 +761,28 @@ async function renderModelDetails(id, isLocal = false) {
       });
     }
 
-    // Now load README markdown card raw contents in background
-    loadReadmeContent(model.id, hfData ? (hfData.defaultBranch || 'main') : 'main', model.readme);
+    // Now render README content directly since it was pre-fetched in detailsData
+    loadReadmeContent(model.id, model.readme);
   }
 }
 
 /**
- * Fetches and displays README markdown files
+ * Displays README markdown files
  */
-async function loadReadmeContent(modelId, branch, initialText) {
+async function loadReadmeContent(modelId, readmeText) {
   const container = document.getElementById('details-readme-content');
   if (!container) return;
 
-  if (initialText) {
-    const rendered = await renderMarkdown(initialText);
-    container.innerHTML = rendered;
-    return;
-  }
-
-  try {
-    const res = await fetch(`https://huggingface.co/api/models/${modelId}/raw/${branch}/README.md`);
-    if (!res.ok) throw new Error('No raw README file');
-    const text = await res.text();
-    const rendered = await renderMarkdown(text);
-    container.innerHTML = rendered;
-  } catch {
+  if (readmeText && readmeText.trim()) {
     try {
-      // Try lowercase branch master fallback
-      const fallbackRes = await fetch(`https://huggingface.co/api/models/${modelId}/raw/master/README.md`);
-      if (!fallbackRes.ok) throw new Error('No fallback readme');
-      const text = await fallbackRes.text();
-      const rendered = await renderMarkdown(text);
+      const rendered = await renderMarkdown(readmeText);
       container.innerHTML = rendered;
-    } catch {
-      container.innerHTML = `<p style="color: var(--text-tertiary)">Unable to load remote README document for this repository.</p>`;
+    } catch (e) {
+      console.error('README render error:', e);
+      container.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.82rem;">Failed to format repository README.</p>`;
     }
+  } else {
+    container.innerHTML = `<p style="color: var(--text-secondary); font-size: 0.82rem;">No README document found for this repository. Please check repository source on Hugging Face.</p>`;
   }
 }
 
