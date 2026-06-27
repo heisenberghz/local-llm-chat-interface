@@ -137,10 +137,10 @@ router.get('/details', async (req, res) => {
     // 2. Fetch files tree to obtain exact sizes (fail-safe with branch fallbacks)
     let fileSizes = {};
     const treeUrls = [
-      `https://huggingface.co/api/models/${id}/tree/${commitOrBranch}`,
-      `https://huggingface.co/api/models/${id}/tree/${branch}`,
-      `https://huggingface.co/api/models/${id}/tree/main`,
-      `https://huggingface.co/api/models/${id}/tree/master`
+      `https://huggingface.co/api/models/${id}/tree/${commitOrBranch}?recursive=true`,
+      `https://huggingface.co/api/models/${id}/tree/${branch}?recursive=true`,
+      `https://huggingface.co/api/models/${id}/tree/main?recursive=true`,
+      `https://huggingface.co/api/models/${id}/tree/master?recursive=true`
     ];
 
     for (const treeUrl of treeUrls) {

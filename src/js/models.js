@@ -550,9 +550,15 @@ async function renderModelDetails(id, isLocal = false) {
         // Construct quant list
         const quants = ggufFiles.map(filename => {
           const tag = extractQuantTag(filename);
+          // pullTag is the filename without subdirectory and without .gguf extension
+          let pullTag = filename.replace(/\.gguf$/i, '');
+          const slashIdx = pullTag.lastIndexOf('/');
+          if (slashIdx !== -1) {
+            pullTag = pullTag.substring(slashIdx + 1);
+          }
           const sizeBytes = fileSizes[filename];
           const sizeGB = sizeBytes ? `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(2)} GB` : estimateQuantSize(specs.params, tag);
-          return { name: filename, tag, size: sizeGB, sizeBytes };
+          return { name: filename, tag, pullTag, size: sizeGB, sizeBytes };
         });
 
         model = {
@@ -675,7 +681,7 @@ async function renderModelDetails(id, isLocal = false) {
                   ${model.quantizations.map(q => {
                     const sharded = isShardedGGUF(q.name);
                     const label = sharded ? `[SHARDED] ${q.name}` : q.name;
-                    return `<option value="${q.tag}" data-name="${q.name}" data-size="${q.size}" data-sharded="${sharded}">${label} (${q.size})</option>`;
+                    return `<option value="${q.pullTag}" data-name="${q.name}" data-size="${q.size}" data-tag="${q.tag}" data-sharded="${sharded}">${label} (${q.size})</option>`;
                   }).join('')}
                 </select>
                 <span class="file-size font-mono" id="selected-file-size">${model.quantizations[0].size}</span>
@@ -744,6 +750,7 @@ async function renderModelDetails(id, isLocal = false) {
         if (!option) return;
         const sizeText = option.getAttribute('data-size');
         const tagText = option.value;
+        const shortTagText = option.getAttribute('data-tag') || tagText;
         const isSharded = option.getAttribute('data-sharded') === 'true';
         sizeSpan.textContent = sizeText;
 
@@ -778,7 +785,7 @@ async function renderModelDetails(id, isLocal = false) {
           btnDownload.style.pointerEvents = '';
           btnDownload.innerHTML = `
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download ${tagText} (${sizeText})
+            Download ${shortTagText} (${sizeText})
           `;
         }
       };
